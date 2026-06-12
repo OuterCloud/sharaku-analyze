@@ -18,7 +18,19 @@ def analyze_wheel_strategy(ticker: str, cost_basis: float) -> dict:
     Returns:
         dict with analysis results
     """
+    # A股不支持Wheel策略
+    if ticker.endswith(".SS") or ticker.endswith(".SZ"):
+        return {"success": False, "error": "A股（沪深）不支持期权Wheel策略"}
+
     stock = yf.Ticker(ticker)
+
+    # 检查是否有期权链
+    try:
+        options_dates = stock.options
+        if not options_dates:
+            return {"success": False, "error": f"{ticker} 没有可交易的期权，无法执行Wheel策略"}
+    except Exception:
+        return {"success": False, "error": f"{ticker} 没有可交易的期权，无法执行Wheel策略"}
 
     # 获取实时价格
     try:
