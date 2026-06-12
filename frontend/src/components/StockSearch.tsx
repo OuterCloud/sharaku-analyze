@@ -65,7 +65,7 @@ export default function StockSearch({ onSelect }: Props) {
         type="text"
         className="stock-search-input"
         value={query}
-        placeholder="输入股票代码或名称搜索（支持任意美股标的）..."
+        placeholder="输入股票代码或名称搜索..."
         autoComplete="off"
         onChange={(e) => handleInput(e.target.value)}
         onFocus={handleFocus}

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Sharaku Analyze - 港美股智能预测分析 Web 服务
+Sharaku Analyze - 股票智能预测分析 Web 服务
 """
 
 import time

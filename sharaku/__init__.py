@@ -1,4 +1,4 @@
-"""Sharaku Analyze - 港美股智能预测分析系统"""
+"""Sharaku Analyze - 股票智能预测分析系统"""
 
 from .lib.base_predictor import BasePredictor
 from .lib.data_utils import DataUtils
