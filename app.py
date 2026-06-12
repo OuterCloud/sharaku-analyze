@@ -139,7 +139,8 @@ async def search_stocks(q: str = "", enabled_only: bool = True):
 
         # 先从本地数据库搜
         local_stocks = stock_db.search_stocks(q, enabled_only)
-        if local_stocks:
+        # 如果本地结果都有完整名称（非自动入库的），直接返回
+        if local_stocks and all(s["name"] != s["ticker"] for s in local_stocks):
             return JSONResponse(content={"success": True, "stocks": local_stocks})
 
         # 本地没有结果，通过 Yahoo Finance 搜索
@@ -197,7 +198,7 @@ async def predict_single_stock(
         stock_info = stock_db.get_stock_by_ticker(ticker)
         if not stock_info or not stock_info["enabled"]:
             # 尝试自动添加
-            stock_db.add_stock(ticker, ticker, "", "US")
+            stock_db.add_stock(ticker, ticker, "", _detect_market(ticker, ""))
             stock_info = stock_db.get_stock_by_ticker(ticker)
             if not stock_info:
                 raise HTTPException(status_code=400, detail="股票不存在或未启用")
@@ -333,7 +334,7 @@ async def predict_batch_stocks(
         available_stocks = stock_db.get_stocks_dict()
         for t in ticker_list:
             if t not in available_stocks:
-                stock_db.add_stock(t, t, "", "US")
+                stock_db.add_stock(t, t, "", _detect_market(t, ""))
         available_stocks = stock_db.get_stocks_dict()
 
         # Date range
