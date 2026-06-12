@@ -49,6 +49,41 @@ def _cache_set(key: str, data: dict):
     _cache[key] = {"data": data, "ts": time.time()}
 
 
+# --- Market detection ---
+_EXCHANGE_TO_MARKET = {
+    "NYQ": "US", "NMS": "US", "NGM": "US", "PCX": "US", "BTS": "US",  # 美国
+    "HKG": "HK", "HKSE": "HK",  # 香港
+    "SHH": "CN", "SHZ": "CN",  # A股
+    "JPX": "JP", "TYO": "JP",  # 日本
+    "TAI": "TW", "TWO": "TW",  # 台湾
+    "KSC": "KR", "KOE": "KR",  # 韩国
+    "LSE": "UK", "IOB": "UK",  # 英国
+    "FRA": "DE", "GER": "DE",  # 德国
+    "PAR": "FR", "ENX": "FR",  # 法国
+    "SGX": "SG",  # 新加坡
+    "ASX": "AU",  # 澳洲
+    "TSX": "CA", "CNQ": "CA",  # 加拿大
+}
+
+_SUFFIX_TO_MARKET = {
+    ".HK": "HK", ".SS": "CN", ".SZ": "CN",
+    ".T": "JP", ".TW": "TW", ".TWO": "TW",
+    ".KS": "KR", ".KQ": "KR",
+    ".L": "UK", ".F": "DE", ".PA": "FR",
+    ".SI": "SG", ".AX": "AU", ".TO": "CA",
+}
+
+
+def _detect_market(ticker: str, exchange: str) -> str:
+    """根据交易所代码和 ticker 后缀判断市场"""
+    if exchange in _EXCHANGE_TO_MARKET:
+        return _EXCHANGE_TO_MARKET[exchange]
+    for suffix, market in _SUFFIX_TO_MARKET.items():
+        if ticker.endswith(suffix):
+            return market
+    return "US"
+
+
 # --- Database ---
 stock_db = StockDatabase()
 
@@ -126,13 +161,8 @@ async def search_stocks(q: str = "", enabled_only: bool = True):
                     ticker = quote.get("symbol", "")
                     name = quote.get("shortname") or quote.get("longname") or ticker
                     exchange = quote.get("exchange", "")
-                    # 根据 exchange 或 ticker 后缀判断市场
-                    if ticker.endswith(".HK") or exchange in ("HKG", "HKSE"):
-                        stock_type = "HK"
-                    elif ticker.endswith(".SS") or ticker.endswith(".SZ"):
-                        stock_type = "CN"
-                    else:
-                        stock_type = "US"
+                    # 根据 exchange 和 ticker 后缀判断市场
+                    stock_type = _detect_market(ticker, exchange)
                     results.append({"ticker": ticker, "name": name, "stock_type": stock_type})
             return JSONResponse(content={"success": True, "stocks": results})
 
