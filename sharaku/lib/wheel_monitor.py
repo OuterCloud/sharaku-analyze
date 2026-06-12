@@ -139,14 +139,37 @@ def analyze_wheel_strategy(ticker: str, cost_basis: float) -> dict:
     call_reason = ""
     recommended_call_strike = None
 
-    if current_price < cost_basis * 0.95:
+    underwater_pct = (cost_basis - current_price) / cost_basis * 100 if cost_basis > 0 else 0
+
+    if current_price < cost_basis * 0.85:
+        # 深度套牢（>15%），不建议卖Call
         call_status = "underwater"
-        call_label = "不建议卖Call (Underwater)"
+        call_label = "深度套牢，不建议卖Call (Deep Underwater)"
         call_reason = (
-            f"当前价 ${current_price:.2f} 远低于成本 ${cost_basis:.2f}，"
-            "卖Call会锁定亏损上限，等待反弹到成本附近再考虑。"
+            f"当前价 ${current_price:.2f} 低于成本 ${cost_basis:.2f} 达 {underwater_pct:.1f}%，"
+            "套牢过深，卖Call权利金微薄且会锁死反弹空间，建议等待大幅反弹后再考虑。"
         )
+    elif current_price < cost_basis:
+        # 轻度套牢（<15%），可在成本价之上卖Call收租
+        recommended_call_strike = round(cost_basis * 1.02)  # 略高于成本，确保被行权不亏
+
+        if price_vs_ema >= 0 and (gap_and_change > 3.0 or is_v_shape):
+            call_status = "moderate"
+            call_label = "轻度套牢但可收租 (Sell Above Cost)"
+            call_reason = (
+                f"当前价 ${current_price:.2f} 低于成本 {underwater_pct:.1f}%，但股价站上EMA且有反弹动能，"
+                f"可在成本之上 ${recommended_call_strike} 卖Call——即使被行权也不亏损，还赚权利金。"
+            )
+        else:
+            call_status = "caution"
+            call_label = "轻度套牢，谨慎卖Call (Caution)"
+            call_reason = (
+                f"当前价 ${current_price:.2f} 低于成本 {underwater_pct:.1f}%，"
+                f"可小仓位在成本之上 ${recommended_call_strike} 卖Call收时间价值，"
+                "但注意不要锁死反弹空间，建议卖远期或少量合约。"
+            )
     else:
+        # 浮盈状态
         recommended_call_strike = round(current_price * (1 + 0.67 * std_5day))
         if recommended_call_strike <= cost_basis:
             recommended_call_strike = round(cost_basis * 1.05)
