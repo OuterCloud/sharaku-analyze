@@ -1,13 +1,13 @@
 # Sharaku Analyze
 
-港美股智能预测分析平台，集成 GBM/蒙特卡洛/Prophet 多模型预测与 Wheel 期权策略盯盘系统。支持 Yahoo Finance 实时数据、动态搜索任意美股/港股标的、批量对比分析。
+股票智能预测分析平台，集成 GBM/蒙特卡洛/Prophet 多模型预测与 Wheel 期权策略盯盘系统。基于 Yahoo Finance 实时数据，支持其覆盖的所有市场标的（美股、港股、A 股、日股、台股等），批量对比分析。
 
 ## 功能
 
 - **单股预测**：输入股票代码和目标日期，获取三种模型的综合预测结果
 - **批量预测**：多选下拉框选取多只股票，按预期收益率排名对比
-- **Wheel 期权策略**：基于 20 日 EMA、波动率、盘面形态，给出 Sell Put / Covered Call 实时决策建议
-- **动态标的搜索**：通过 Yahoo Finance Search API 实时搜索，支持港股（.HK）和美股
+- **Wheel 期权策略**：基于 20 日 EMA、波动率、盘面形态，给出 Sell Put / Covered Call 实时决策建议（仅限有期权的美股/港股）
+- **动态标的搜索**：通过 Yahoo Finance Search API 实时搜索，支持 Yahoo Finance 覆盖的所有市场
 - **可视化图表**：价格分布图、蒙特卡洛路径图、累积收益图
 
 ## 预测模型
