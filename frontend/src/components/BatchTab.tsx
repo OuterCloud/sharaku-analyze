@@ -123,6 +123,9 @@ function MultiStockSelect({
                 <span className="multi-select-check">
                   {isSelected ? "\u2611" : "\u2610"}
                 </span>
+                <span className={`stock-market-tag ${(s.stock_type || "US").toLowerCase()}`}>
+                  {s.stock_type || "US"}
+                </span>
                 <span className="stock-code">{s.ticker}</span>
                 <span className="stock-name">{s.name}</span>
               </div>

@@ -210,6 +210,30 @@ body {
   background: #f0f8ff;
 }
 
+.stock-market-tag {
+  font-size: 0.7em;
+  font-weight: 600;
+  padding: 2px 5px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+
+.stock-market-tag.us {
+  background: #e8f4fd;
+  color: #1976d2;
+}
+
+.stock-market-tag.hk {
+  background: #fef3e8;
+  color: #e65100;
+}
+
+.stock-market-tag.cn {
+  background: #fce8e8;
+  color: #c62828;
+}
+
 .stock-code {
   font-weight: 600;
   color: #333;

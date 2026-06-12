@@ -86,7 +86,7 @@ async def health_check():
 
 @app.get("/api/stocks")
 async def get_stocks(enabled_only: bool = True, stock_type: str = None):
-    """获取所有股票"""
+    """获取所有已缓存的股票（用户曾搜索/使用过的标的）"""
     try:
         stocks = stock_db.get_all_stocks(enabled_only, stock_type)
         return JSONResponse(content={"success": True, "stocks": stocks})
@@ -95,9 +95,14 @@ async def get_stocks(enabled_only: bool = True, stock_type: str = None):
 
 
 @app.get("/api/stocks/search")
-async def search_stocks(q: str, enabled_only: bool = True):
+async def search_stocks(q: str = "", enabled_only: bool = True):
     """搜索股票 - 先查本地库，再通过 Yahoo Finance 动态搜索"""
     try:
+        if not q.strip():
+            # 空查询返回本地已缓存的股票
+            stocks = stock_db.get_all_stocks(enabled_only)
+            return JSONResponse(content={"success": True, "stocks": stocks})
+
         # 先从本地数据库搜
         local_stocks = stock_db.search_stocks(q, enabled_only)
         if local_stocks:
@@ -121,7 +126,15 @@ async def search_stocks(q: str, enabled_only: bool = True):
                 if qtype in ("EQUITY", "ETF"):
                     ticker = quote.get("symbol", "")
                     name = quote.get("shortname") or quote.get("longname") or ticker
-                    results.append({"ticker": ticker, "name": name, "stock_type": "US"})
+                    exchange = quote.get("exchange", "")
+                    # 根据 exchange 或 ticker 后缀判断市场
+                    if ticker.endswith(".HK") or exchange in ("HKG", "HKSE"):
+                        stock_type = "HK"
+                    elif ticker.endswith(".SS") or ticker.endswith(".SZ"):
+                        stock_type = "CN"
+                    else:
+                        stock_type = "US"
+                    results.append({"ticker": ticker, "name": name, "stock_type": stock_type})
             return JSONResponse(content={"success": True, "stocks": results})
 
         return JSONResponse(content={"success": True, "stocks": local_stocks})

@@ -22,30 +22,21 @@ export default function StockSearch({ onSelect }: Props) {
     return () => document.removeEventListener("click", onClickOut);
   }, []);
 
-  async function handleInput(val: string) {
-    setQuery(val);
-    clearTimeout(timer.current);
-    if (!val.trim()) {
-      const stocks = await getStocks();
-      setItems(stocks);
-      setShow(stocks.length > 0);
-      setFocus(-1);
-      return;
-    }
-    timer.current = setTimeout(async () => {
-      const stocks = await searchStocks(val);
-      setItems(stocks);
-      setShow(stocks.length > 0);
-      setFocus(-1);
-    }, 200);
+  async function doSearch(val: string) {
+    const stocks = val.trim() ? await searchStocks(val) : await getStocks();
+    setItems(stocks);
+    setShow(true);
+    setFocus(-1);
   }
 
-  async function handleFocus() {
-    const stocks = query.trim()
-      ? await searchStocks(query)
-      : await getStocks();
-    setItems(stocks);
-    setShow(stocks.length > 0);
+  function handleInput(val: string) {
+    setQuery(val);
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => doSearch(val), 200);
+  }
+
+  function handleFocus() {
+    doSearch(query);
   }
 
   function select(stock: Stock) {
@@ -91,6 +82,9 @@ export default function StockSearch({ onSelect }: Props) {
                 select(s);
               }}
             >
+              <span className={`stock-market-tag ${(s.stock_type || "US").toLowerCase()}`}>
+                {s.stock_type || "US"}
+              </span>
               <span className="stock-code">{s.ticker}</span>
               <span className="stock-name">{s.name}</span>
             </div>
