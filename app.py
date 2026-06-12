@@ -10,7 +10,6 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, Optional
 
-import numpy as np
 import pandas as pd
 import uvicorn
 from dotenv import load_dotenv
@@ -144,65 +143,6 @@ async def search_stocks(q: str = "", enabled_only: bool = True):
         return JSONResponse(content={"success": True, "stocks": local_stocks})
 
 
-@app.post("/api/stocks")
-async def add_stock(
-    ticker: str = Form(...),
-    name: str = Form(...),
-    sector: str = Form(""),
-    stock_type: str = Form("US"),
-):
-    """添加新股票"""
-    try:
-        if not ticker or not name:
-            raise HTTPException(status_code=400, detail="股票代码和名称不能为空")
-
-        success = stock_db.add_stock(ticker, name, sector, stock_type)
-        if success:
-            return JSONResponse(content={"success": True, "message": "股票添加成功"})
-        else:
-            return JSONResponse(
-                content={"success": False, "error": "股票代码已存在"}, status_code=400
-            )
-    except HTTPException:
-        raise
-    except Exception as e:
-        return JSONResponse(content={"success": False, "error": str(e)}, status_code=500)
-
-
-@app.get("/api/stocks/validate")
-async def validate_ticker(ticker: str):
-    """验证并添加任意美股标的"""
-    import yfinance as yf
-
-    ticker = ticker.upper().strip()
-    # 先查本地数据库
-    existing = stock_db.get_stock_by_ticker(ticker)
-    if existing:
-        return JSONResponse(content={
-            "success": True,
-            "stock": {"ticker": existing["ticker"], "name": existing["name"]},
-        })
-
-    # 通过 yfinance 验证
-    try:
-        info = yf.Ticker(ticker).fast_info
-        if info and info.get("lastPrice"):
-            name = ticker  # fast_info 没有 name，用 ticker 代替
-            try:
-                full_info = yf.Ticker(ticker).info
-                name = full_info.get("shortName") or full_info.get("longName") or ticker
-            except Exception:
-                pass
-            # 自动添加到数据库
-            stock_db.add_stock(ticker, name, "", "US")
-            return JSONResponse(content={
-                "success": True,
-                "stock": {"ticker": ticker, "name": name},
-            })
-    except Exception:
-        pass
-
-    return JSONResponse(content={"success": False, "error": f"无法识别标的: {ticker}"})
 
 
 # ==================== Prediction ====================

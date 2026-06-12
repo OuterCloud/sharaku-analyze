@@ -68,10 +68,6 @@ export async function searchStocks(q: string): Promise<Stock[]> {
   return data.success ? data.stocks : []
 }
 
-export async function validateTicker(ticker: string): Promise<{ success: boolean; stock?: Stock; error?: string }> {
-  const res = await fetch(`/api/stocks/validate?ticker=${encodeURIComponent(ticker)}`)
-  return res.json()
-}
 
 export async function getStocks(): Promise<Stock[]> {
   const res = await fetch('/api/stocks')

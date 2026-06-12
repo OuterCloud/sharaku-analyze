@@ -92,52 +92,6 @@ class StockDatabase:
         except sqlite3.IntegrityError:
             return False
 
-    def update_stock(
-        self,
-        ticker: str,
-        name: str = None,
-        sector: str = None,
-        stock_type: str = None,
-        enabled: bool = None,
-    ) -> bool:
-        """更新股票信息"""
-        with self.get_connection() as conn:
-            update_fields = []
-            params = []
-
-            if name is not None:
-                update_fields.append("name = ?")
-                params.append(name)
-            if sector is not None:
-                update_fields.append("sector = ?")
-                params.append(sector)
-            if stock_type is not None:
-                update_fields.append("stock_type = ?")
-                params.append(stock_type)
-            if enabled is not None:
-                update_fields.append("enabled = ?")
-                params.append(enabled)
-
-            if not update_fields:
-                return False
-
-            update_fields.append("updated_at = CURRENT_TIMESTAMP")
-            params.append(ticker.upper())
-
-            query = f"UPDATE stocks SET {', '.join(update_fields)} WHERE ticker = ?"
-            cursor = conn.execute(query, params)
-            conn.commit()
-
-            return cursor.rowcount > 0
-
-    def delete_stock(self, ticker: str) -> bool:
-        """删除股票"""
-        with self.get_connection() as conn:
-            cursor = conn.execute(
-                "DELETE FROM stocks WHERE ticker = ?", (ticker.upper(),)
-            )
-            conn.commit()
-            return cursor.rowcount > 0
 
     def get_stocks_dict(self, enabled_only: bool = True) -> Dict[str, str]:
         """获取股票字典（ticker -> name）"""

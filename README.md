@@ -1,13 +1,14 @@
 # Sharaku Analyze
 
-港美股智能预测分析系统。基于 GBM（几何布朗运动）、蒙特卡洛模拟和 Prophet 时间序列模型进行股价预测。
+港美股智能预测分析平台，集成 GBM/蒙特卡洛/Prophet 多模型预测与 Wheel 期权策略盯盘系统。支持 Yahoo Finance 实时数据、动态搜索任意美股/港股标的、批量对比分析。
 
 ## 功能
 
 - **单股预测**：输入股票代码和目标日期，获取三种模型的综合预测结果
-- **批量预测**：同时预测多只股票，按预期收益率排名
+- **批量预测**：多选下拉框选取多只股票，按预期收益率排名对比
+- **Wheel 期权策略**：基于 20 日 EMA、波动率、盘面形态，给出 Sell Put / Covered Call 实时决策建议
+- **动态标的搜索**：通过 Yahoo Finance Search API 实时搜索，支持港股（.HK）和美股
 - **可视化图表**：价格分布图、蒙特卡洛路径图、累积收益图
-- **股票管理**：SQLite 数据库管理股票列表
 
 ## 预测模型
 
@@ -19,44 +20,36 @@
 
 ## 快速开始
 
-### 后端
+### 一键部署
 
 ```bash
-# 安装依赖
-pip install -r requirements.txt
-
-# 启动服务
-python app.py
-```
-
-### 前端
-
-```bash
-cd frontend
-npm install
-npm run dev    # 开发模式
-npm run build  # 构建生产版本
-```
-
-### 一键启动（生产）
-
-```bash
-pip install -r requirements.txt
-cd frontend && npm install && npm run build && cd ..
-python app.py
+./start.sh
+# 自动创建 venv、安装依赖、构建前端、启动服务
 # 访问 http://localhost:8000
 ```
 
-## API 文档
+### 手动启动
+
+```bash
+# 后端
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+python app.py
+
+# 前端（另一个终端）
+cd frontend && npm install && npm run build
+```
+
+## API
 
 | 端点 | 方法 | 说明 |
 |------|------|------|
 | `/health` | GET | 健康检查 |
-| `/api/stocks` | GET | 获取股票列表 |
-| `/api/stocks/search` | GET | 搜索股票（参数: `q`） |
-| `/api/stocks` | POST | 添加股票 |
-| `/api/predict/single` | POST | 单股预测（参数: `ticker`, `target_date`） |
-| `/api/predict/batch` | POST | 批量预测（参数: `tickers`, `target_date`） |
+| `/api/stocks` | GET | 获取已缓存股票列表 |
+| `/api/stocks/search?q=` | GET | 搜索股票（本地 + Yahoo Finance） |
+| `/api/predict/single` | POST | 单股预测（`ticker`, `target_date`） |
+| `/api/predict/batch` | POST | 批量预测（`tickers`, `target_date`） |
+| `/api/wheel/analyze` | POST | Wheel 策略分析（`ticker`, `cost_basis`） |
 
 ## 配置
 
@@ -78,17 +71,16 @@ pytest tests/
 
 - **后端**: Python + FastAPI + uvicorn
 - **前端**: React 18 + TypeScript + Vite
-- **数据**: yfinance（免费，无需 API Key）
-- **存储**: SQLite（股票列表）+ 内存缓存（预测结果）
-- **预测**: NumPy + pandas + matplotlib
+- **数据**: Yahoo Finance（yfinance，免费无需 API Key）
+- **存储**: SQLite（搜索缓存）+ 内存缓存（预测结果 TTL 1h）
 
 ## 项目结构
 
 ```
 sharaku-analyze/
-├── app.py              # FastAPI 入口
-├── sharaku/            # 核心 Python 包
-│   ├── config.py
+├── app.py                  # FastAPI 入口
+├── start.sh                # 一键部署脚本
+├── sharaku/                # 核心 Python 包
 │   └── lib/
 │       ├── base_predictor.py
 │       ├── data_utils.py
@@ -96,13 +88,18 @@ sharaku-analyze/
 │       ├── monte_carlo_predictor.py
 │       ├── prophet_predictor.py
 │       ├── stock_database.py
-│       └── visualization.py
-├── frontend/           # React 前端
+│       ├── visualization.py
+│       └── wheel_monitor.py
+├── frontend/               # React 前端
 │   └── src/
 │       ├── App.tsx
 │       ├── api/predict.ts
 │       └── components/
-├── tests/              # 测试
+│           ├── SingleTab.tsx
+│           ├── BatchTab.tsx
+│           ├── WheelTab.tsx
+│           └── StockSearch.tsx
+├── tests/
 └── requirements.txt
 ```
 
