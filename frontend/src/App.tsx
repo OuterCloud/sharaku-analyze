@@ -3,9 +3,10 @@ import BatchTab from "./components/BatchTab";
 import Footer from "./components/Footer";
 import Header from "./components/Header";
 import SingleTab from "./components/SingleTab";
+import TechnicalTab from "./components/TechnicalTab";
 import WheelTab from "./components/WheelTab";
 
-type Tab = "single" | "batch" | "wheel";
+type Tab = "single" | "batch" | "wheel" | "technical";
 
 const defaultDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
   .toISOString()
@@ -33,6 +34,12 @@ export default function App() {
             批量预测
           </button>
           <button
+            className={`tab${activeTab === "technical" ? " active" : ""}`}
+            onClick={() => setActiveTab("technical")}
+          >
+            技术分析
+          </button>
+          <button
             className={`tab${activeTab === "wheel" ? " active" : ""}`}
             onClick={() => setActiveTab("wheel")}
           >
@@ -46,6 +53,9 @@ export default function App() {
           </div>
           <div style={{ display: activeTab === "batch" ? "block" : "none" }}>
             <BatchTab defaultDate={defaultDate} />
+          </div>
+          <div style={{ display: activeTab === "technical" ? "block" : "none" }}>
+            <TechnicalTab />
           </div>
           <div style={{ display: activeTab === "wheel" ? "block" : "none" }}>
             <WheelTab />

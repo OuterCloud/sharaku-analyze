@@ -6,6 +6,7 @@ from .lib.gbm_predictor import GBMPredictor
 from .lib.monte_carlo_predictor import MonteCarloPredictor
 from .lib.prophet_predictor import ProphetPredictor
 from .lib.stock_database import StockDatabase
+from .lib.technical_analyzer import TechnicalAnalyzer
 from .lib.wheel_monitor import analyze_wheel_strategy
 
 __all__ = [
@@ -15,5 +16,6 @@ __all__ = [
     "MonteCarloPredictor",
     "ProphetPredictor",
     "StockDatabase",
+    "TechnicalAnalyzer",
     "analyze_wheel_strategy",
 ]

@@ -18,7 +18,7 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from loguru import logger
 
-from sharaku import DataUtils, GBMPredictor, MonteCarloPredictor, ProphetPredictor, StockDatabase, analyze_wheel_strategy
+from sharaku import DataUtils, GBMPredictor, MonteCarloPredictor, ProphetPredictor, StockDatabase, TechnicalAnalyzer, analyze_wheel_strategy
 from sharaku.lib.visualization import (
     generate_batch_chart,
     generate_cumulative_returns_chart,
@@ -412,6 +412,41 @@ async def predict_batch_stocks(
         raise
     except Exception as e:
         logger.error(f"Batch prediction failed: {e}")
+        return JSONResponse(content={"success": False, "error": str(e)}, status_code=500)
+
+
+# ==================== Technical Analysis ====================
+
+
+@app.post("/api/technical/analyze")
+async def technical_analyze(
+    ticker: str = Form(...),
+):
+    """技术分析 API"""
+    try:
+        ticker = ticker.upper()
+
+        # Check cache
+        cache_key = f"technical:{ticker}"
+        cached = _cache_get(cache_key)
+        if cached:
+            return JSONResponse(content=cached)
+
+        # Auto-add ticker to DB if not present
+        stock_info = stock_db.get_stock_by_ticker(ticker)
+        if not stock_info:
+            stock_db.add_stock(ticker, ticker, "", _detect_market(ticker, ""))
+
+        analyzer = TechnicalAnalyzer(ticker)
+        result = analyzer.analyze()
+
+        if result.get("success"):
+            _cache_set(cache_key, result)
+
+        return JSONResponse(content=result)
+
+    except Exception as e:
+        logger.error(f"Technical analysis failed: {e}")
         return JSONResponse(content={"success": False, "error": str(e)}, status_code=500)
 
 

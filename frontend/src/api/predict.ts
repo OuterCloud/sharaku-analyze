@@ -121,3 +121,51 @@ export async function analyzeWheel(ticker: string, costBasis: number): Promise<W
   const res = await post('/api/wheel/analyze', { ticker, cost_basis: String(costBasis) })
   return res.json()
 }
+
+// Technical Analysis
+export interface CandlestickPattern {
+  name: string
+  description: string
+  score: number
+  signal: string
+}
+
+export interface TechnicalIndicatorValues {
+  ma5: number
+  ma10: number
+  ma20: number
+  ma60: number
+  macd: number
+  macd_signal: number
+  macd_hist: number
+  rsi: number
+  k: number
+  d: number
+  bb_upper: number
+  bb_middle: number
+  bb_lower: number
+  adx: number
+  di_plus: number
+  di_minus: number
+}
+
+export interface TechnicalResult {
+  success: boolean
+  ticker: string
+  current_price: number
+  score: number
+  signals: Record<string, string>
+  advice: string
+  warning: string
+  candlestick_pattern: CandlestickPattern | null
+  patterns_checked?: string[]
+  stop_loss?: number
+  target?: number
+  indicator_values: TechnicalIndicatorValues
+  error?: string
+}
+
+export async function analyzeTechnical(ticker: string): Promise<TechnicalResult> {
+  const res = await post('/api/technical/analyze', { ticker })
+  return res.json()
+}

@@ -3,6 +3,7 @@ pandas>=2.0,<3.0
 numpy>=1.23,<2.0
 matplotlib>=3.5
 seaborn>=0.12
+ta==0.11.0
 fastapi>=0.100,<1.0
 uvicorn[standard]>=0.20
 python-multipart>=0.0.5
