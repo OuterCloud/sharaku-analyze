@@ -7,6 +7,7 @@ import {
   searchStocks,
   Stock,
 } from "../api/predict";
+import { useI18n } from "../i18n/context";
 
 interface Props {
   defaultDate: string;
@@ -28,6 +29,7 @@ function MultiStockSelect({
   const wrapRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const { t } = useI18n();
 
   useEffect(() => {
     function onClickOut(e: MouseEvent) {
@@ -73,7 +75,6 @@ function MultiStockSelect({
 
   return (
     <div className="multi-select-wrapper" ref={wrapRef}>
-      {/* 已选标签 */}
       {selected.size > 0 && (
         <div className="multi-select-tags">
           {Array.from(selected.entries()).map(([ticker, name]) => (
@@ -88,25 +89,23 @@ function MultiStockSelect({
             </span>
           ))}
           <button className="multi-select-clear" onClick={onClear}>
-            清空
+            {t("batch.clear")}
           </button>
         </div>
       )}
 
-      {/* 搜索输入 */}
       <input
         ref={inputRef}
         type="text"
         className="stock-search-input"
         value={query}
-        placeholder={`搜索添加股票...（已选 ${selected.size} 只）`}
+        placeholder={`${t("batch.searchPlaceholder")}（${t("batch.selected")} ${selected.size} ${t("batch.unit")}）`}
         autoComplete="off"
         onChange={(e) => handleInput(e.target.value)}
         onFocus={handleFocus}
         onKeyDown={handleKey}
       />
 
-      {/* 下拉列表 */}
       {show && (
         <div className="stock-dropdown show">
           {items.map((s, i) => {
@@ -133,7 +132,7 @@ function MultiStockSelect({
           })}
           {items.length === 0 && (
             <div className="stock-dropdown-item" style={{ color: "#999" }}>
-              无匹配结果
+              {t("batch.noMatch")}
             </div>
           )}
         </div>
@@ -148,6 +147,7 @@ export default function BatchTab({ defaultDate }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState<BatchPredictResult | null>(null);
+  const { t } = useI18n();
 
   function toggleStock(stock: Stock) {
     setSelected((prev) => {
@@ -167,7 +167,7 @@ export default function BatchTab({ defaultDate }: Props) {
 
   async function handlePredict() {
     if (selected.size === 0) {
-      setError("请至少选择一只股票");
+      setError(t("batch.error.selectAtLeast"));
       return;
     }
     setLoading(true);
@@ -177,12 +177,12 @@ export default function BatchTab({ defaultDate }: Props) {
       const tickers = Array.from(selected.keys()).join(",");
       const data = await predictBatch(tickers, targetDate);
       if (!data.success) {
-        setError(data.error || "预测失败");
+        setError(data.error || t("common.error.predictFailed"));
         return;
       }
       setResult(data);
     } catch {
-      setError("请求失败，请稍后重试");
+      setError(t("common.error.requestFailed"));
     } finally {
       setLoading(false);
     }
@@ -191,7 +191,7 @@ export default function BatchTab({ defaultDate }: Props) {
   return (
     <div className="tab-content">
       <div className="form-group">
-        <label>选择股票（可多选）</label>
+        <label>{t("batch.selectStocks")}</label>
         <MultiStockSelect
           selected={selected}
           onToggle={toggleStock}
@@ -200,7 +200,7 @@ export default function BatchTab({ defaultDate }: Props) {
       </div>
 
       <div className="form-group">
-        <label>预测目标日期</label>
+        <label>{t("common.targetDate")}</label>
         <input
           type="date"
           value={targetDate}
@@ -213,13 +213,13 @@ export default function BatchTab({ defaultDate }: Props) {
         disabled={loading}
         onClick={handlePredict}
       >
-        {loading ? "分析中..." : "批量预测"}
+        {loading ? t("common.loading") : t("batch.startPredict")}
       </button>
 
       {loading && (
         <div className="loading">
           <div className="spinner"></div>
-          <p>正在批量分析中，请稍候...</p>
+          <p>{t("batch.analyzing")}</p>
         </div>
       )}
 
@@ -231,27 +231,29 @@ export default function BatchTab({ defaultDate }: Props) {
 }
 
 function BatchResult({ data }: { data: BatchPredictResult }) {
+  const { t } = useI18n();
+
   return (
     <div style={{ marginTop: "20px" }}>
       {data.chart && (
         <div className="result-card">
-          <img src={`data:image/png;base64,${data.chart}`} alt="批量对比图" style={{ width: "100%" }} />
+          <img src={`data:image/png;base64,${data.chart}`} alt="batch chart" style={{ width: "100%" }} />
         </div>
       )}
 
       <div className="result-card">
-        <h4>预测结果排名（按预期收益率）</h4>
+        <h4>{t("batch.result.title")}</h4>
         <div className="batch-table-wrapper">
           <table className="batch-table">
             <thead>
               <tr>
-                <th>股票</th>
-                <th>当前价格</th>
-                <th>GBM预测</th>
-                <th>GBM收益</th>
-                <th>MC预测</th>
-                <th>MC收益</th>
-                <th>波动率</th>
+                <th>{t("batch.table.stock")}</th>
+                <th>{t("batch.table.currentPrice")}</th>
+                <th>{t("batch.table.gbmPredict")}</th>
+                <th>{t("batch.table.gbmReturn")}</th>
+                <th>{t("batch.table.mcPredict")}</th>
+                <th>{t("batch.table.mcReturn")}</th>
+                <th>{t("batch.table.volatility")}</th>
               </tr>
             </thead>
             <tbody>

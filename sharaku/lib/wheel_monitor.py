@@ -6,21 +6,31 @@ Wheel期权策略盯盘分析模块
 import numpy as np
 import yfinance as yf
 
+from sharaku.i18n import ERRORS, WHEEL_CALL, WHEEL_PUT
 
-def analyze_wheel_strategy(ticker: str, cost_basis: float) -> dict:
+
+def analyze_wheel_strategy(ticker: str, cost_basis: float, lang: str = "zh") -> dict:
     """
     分析Wheel期权策略，返回结构化结果。
 
     Args:
         ticker: 股票代码
         cost_basis: 正股持仓成本价（用于Covered Call决策）
+        lang: 语言 "zh" 或 "en"
 
     Returns:
         dict with analysis results
     """
+    if lang not in ("zh", "en"):
+        lang = "zh"
+
+    t_put = WHEEL_PUT[lang]
+    t_call = WHEEL_CALL[lang]
+    t_err = ERRORS[lang]
+
     # A股不支持Wheel策略
     if ticker.endswith(".SS") or ticker.endswith(".SZ"):
-        return {"success": False, "error": "A股（沪深）不支持期权Wheel策略"}
+        return {"success": False, "error": t_err["a_share_no_options"]}
 
     stock = yf.Ticker(ticker)
 
@@ -28,9 +38,9 @@ def analyze_wheel_strategy(ticker: str, cost_basis: float) -> dict:
     try:
         options_dates = stock.options
         if not options_dates:
-            return {"success": False, "error": f"{ticker} 没有可交易的期权，无法执行Wheel策略"}
+            return {"success": False, "error": t_err["no_options"].format(ticker=ticker)}
     except Exception:
-        return {"success": False, "error": f"{ticker} 没有可交易的期权，无法执行Wheel策略"}
+        return {"success": False, "error": t_err["no_options"].format(ticker=ticker)}
 
     # 获取实时价格
     try:
@@ -41,7 +51,7 @@ def analyze_wheel_strategy(ticker: str, cost_basis: float) -> dict:
     # 获取近3个月历史K线
     hist = stock.history(period="3mo")
     if hist.empty:
-        return {"success": False, "error": f"无法获取 {ticker} 数据，请检查代码或网络连接"}
+        return {"success": False, "error": t_err["no_ticker_data"].format(ticker=ticker)}
 
     if current_price is None:
         current_price = hist["Close"].iloc[-1]
@@ -93,37 +103,28 @@ def analyze_wheel_strategy(ticker: str, cost_basis: float) -> dict:
     # ========== SELL PUT 决策 ==========
     if ema_trend < -0.02:
         put_status = "danger"
-        put_label = "危险：下降趋势 (Falling Knife)"
-        put_reason = (
-            f"20日EMA近5天下跌{ema_trend * 100:.1f}%，处于下降趋势中，"
-            "此时卖Put容易被assign后继续亏损，应等趋势企稳。"
-        )
+        put_label = t_put["danger_label"]
+        put_reason = t_put["danger_reason"].format(ema_trend=ema_trend * 100)
     elif ema_trend < 0 and price_vs_ema < -0.05:
         put_status = "caution"
-        put_label = "谨慎观望 (Caution)"
-        put_reason = (
-            f"EMA走平偏弱，股价偏离EMA达{price_vs_ema * 100:.1f}%，"
-            "不排除趋势转弱的可能，如需卖Put建议极低strike小仓位试探。"
-        )
+        put_label = t_put["caution_label"]
+        put_reason = t_put["caution_reason"].format(price_vs_ema=price_vs_ema * 100)
     elif price_vs_ema < 0 and ema_trend >= 0:
         put_status = "great"
-        put_label = "极佳建仓期 (Great Opportunity)"
-        put_reason = (
-            f"{ticker} 处于上升趋势中的回调（EMA仍在走高+{ema_trend * 100:.1f}%），"
-            "股价短暂跌破EMA，恐慌推高Put权利金，正是卖Put的黄金窗口！"
-        )
+        put_label = t_put["great_label"]
+        put_reason = t_put["great_reason_pullback"].format(ticker=ticker, ema_trend=ema_trend * 100)
     elif price_vs_ema < 0.02 and intra_drop < -5.0 and ema_trend >= 0:
         put_status = "great"
-        put_label = "极佳建仓期 (Great Opportunity)"
-        put_reason = f"{ticker} 上升趋势中遭遇日内剧烈洗盘(>{abs(intra_drop):.1f}%)，IV飙升，时间价值极肥！"
+        put_label = t_put["great_label"]
+        put_reason = t_put["great_reason_washout"].format(ticker=ticker, intra_drop=abs(intra_drop))
     elif price_vs_ema < 0.05 and intra_drop < -3.0 and ema_trend >= -0.01:
         put_status = "acceptable"
-        put_label = "可考虑建仓 (Acceptable)"
-        put_reason = "股价接近EMA且有一定回调，趋势尚未走坏，可小仓位试探性卖Put。"
+        put_label = t_put["acceptable_label"]
+        put_reason = t_put["acceptable_reason"]
     else:
         put_status = "wait"
-        put_label = "观望等待 (Wait for Dip)"
-        put_reason = "当前远离支撑位或趋势不明朗，建议等回调到EMA附近再卖Put。"
+        put_label = t_put["wait_label"]
+        put_reason = t_put["wait_reason"]
 
     # Put strike 推荐
     raw_put_strike = current_price * (1 - 1.04 * std_5day)
@@ -144,29 +145,25 @@ def analyze_wheel_strategy(ticker: str, cost_basis: float) -> dict:
     if current_price < cost_basis * 0.85:
         # 深度套牢（>15%），不建议卖Call
         call_status = "underwater"
-        call_label = "深度套牢，不建议卖Call (Deep Underwater)"
-        call_reason = (
-            f"当前价 ${current_price:.2f} 低于成本 ${cost_basis:.2f} 达 {underwater_pct:.1f}%，"
-            "套牢过深，卖Call权利金微薄且会锁死反弹空间，建议等待大幅反弹后再考虑。"
+        call_label = t_call["underwater_label"]
+        call_reason = t_call["underwater_reason"].format(
+            price=current_price, cost=cost_basis, pct=underwater_pct
         )
     elif current_price < cost_basis:
         # 轻度套牢（<15%），可在成本价之上卖Call收租
-        recommended_call_strike = round(cost_basis * 1.02)  # 略高于成本，确保被行权不亏
+        recommended_call_strike = round(cost_basis * 1.02)
 
         if price_vs_ema >= 0 and (gap_and_change > 3.0 or is_v_shape):
             call_status = "moderate"
-            call_label = "轻度套牢但可收租 (Sell Above Cost)"
-            call_reason = (
-                f"当前价 ${current_price:.2f} 低于成本 {underwater_pct:.1f}%，但股价站上EMA且有反弹动能，"
-                f"可在成本之上 ${recommended_call_strike} 卖Call——即使被行权也不亏损，还赚权利金。"
+            call_label = t_call["moderate_underwater_label"]
+            call_reason = t_call["moderate_underwater_reason"].format(
+                price=current_price, pct=underwater_pct, strike=recommended_call_strike
             )
         else:
             call_status = "caution"
-            call_label = "轻度套牢，谨慎卖Call (Caution)"
-            call_reason = (
-                f"当前价 ${current_price:.2f} 低于成本 {underwater_pct:.1f}%，"
-                f"可小仓位在成本之上 ${recommended_call_strike} 卖Call收时间价值，"
-                "但注意不要锁死反弹空间，建议卖远期或少量合约。"
+            call_label = t_call["caution_underwater_label"]
+            call_reason = t_call["caution_underwater_reason"].format(
+                price=current_price, pct=underwater_pct, strike=recommended_call_strike
             )
     else:
         # 浮盈状态
@@ -176,26 +173,23 @@ def analyze_wheel_strategy(ticker: str, cost_basis: float) -> dict:
 
         if price_vs_ema < 0:
             call_status = "hold"
-            call_label = "暂时忍耐 (Hold Shares)"
-            call_reason = (
-                f"股价低于20日EMA（偏离{price_vs_ema * 100:.1f}%），正处于回调阶段，"
-                "此时卖Call会锁死反弹空间，应等待股价重回EMA上方再考虑。"
-            )
+            call_label = t_call["hold_label"]
+            call_reason = t_call["hold_reason_pullback"].format(deviation=price_vs_ema * 100)
         elif (gap_and_change > 5.0 or is_v_shape) and price_vs_ema > 0.02:
             call_status = "great"
-            call_label = "绝佳收租期 (High Premium)"
+            call_label = t_call["great_label"]
             if is_v_shape:
-                call_reason = f"{ticker} 强势V型反转且站稳EMA上方，IV拉升，Call权利金丰厚！"
+                call_reason = t_call["great_reason_v"].format(ticker=ticker)
             else:
-                call_reason = f"{ticker} 单日暴涨 {gap_and_change:.1f}%，高于EMA，适合高位卖出Covered Call！"
+                call_reason = t_call["great_reason_surge"].format(ticker=ticker, change=gap_and_change)
         elif gap_and_change > 3.0 and price_vs_ema > 0:
             call_status = "moderate"
-            call_label = "可以收租 (Moderate Premium)"
-            call_reason = "股价站上EMA且有涨幅，Call权利金尚可，可适量卖出。"
+            call_label = t_call["moderate_label"]
+            call_reason = t_call["moderate_reason"]
         else:
             call_status = "hold"
-            call_label = "暂时忍耐 (Hold Shares)"
-            call_reason = "当前未出现明显冲高，或股价尚未站稳EMA上方，卖Call时机不成熟。"
+            call_label = t_call["hold_label"]
+            call_reason = t_call["hold_reason_no_spike"]
 
     return {
         "success": True,

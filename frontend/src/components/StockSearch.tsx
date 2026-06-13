@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { getStocks, searchStocks, Stock } from "../api/predict";
+import { useI18n } from "../i18n/context";
 
 interface Props {
   onSelect: (ticker: string) => void;
@@ -12,6 +13,7 @@ export default function StockSearch({ onSelect }: Props) {
   const [focus, setFocus] = useState(-1);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const wrapRef = useRef<HTMLDivElement>(null);
+  const { t } = useI18n();
 
   useEffect(() => {
     function onClickOut(e: MouseEvent) {
@@ -59,18 +61,37 @@ export default function StockSearch({ onSelect }: Props) {
     } else if (e.key === "Escape") setShow(false);
   }
 
+  function handleClear() {
+    setQuery("");
+    setItems([]);
+    setShow(false);
+    onSelect("");
+  }
+
   return (
     <div className="stock-search-wrapper" ref={wrapRef}>
-      <input
-        type="text"
-        className="stock-search-input"
-        value={query}
-        placeholder="输入股票代码或名称搜索..."
-        autoComplete="off"
-        onChange={(e) => handleInput(e.target.value)}
-        onFocus={handleFocus}
-        onKeyDown={handleKey}
-      />
+      <div className="stock-search-input-wrap">
+        <input
+          type="text"
+          className="stock-search-input"
+          value={query}
+          placeholder={t("search.placeholder")}
+          autoComplete="off"
+          onChange={(e) => handleInput(e.target.value)}
+          onFocus={handleFocus}
+          onKeyDown={handleKey}
+        />
+        {query && (
+          <button
+            className="stock-search-clear"
+            onClick={handleClear}
+            type="button"
+            aria-label={t("search.clear")}
+          >
+            &times;
+          </button>
+        )}
+      </div>
       {show && (
         <div className="stock-dropdown show">
           {items.map((s, i) => (
@@ -91,7 +112,7 @@ export default function StockSearch({ onSelect }: Props) {
           ))}
           {items.length === 0 && (
             <div className="stock-dropdown-item" style={{ color: "#999" }}>
-              无匹配结果，可直接输入代码回车验证
+              {t("search.noMatch")}
             </div>
           )}
         </div>

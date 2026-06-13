@@ -1,0 +1,131 @@
+import type { TranslationKey } from "./zh";
+
+const en: Record<TranslationKey, string> = {
+  // Header
+  "header.subtitle": "Multi-Model Stock Prediction & Analysis",
+
+  // Tabs
+  "tab.single": "Single Stock",
+  "tab.batch": "Batch Predict",
+  "tab.technical": "Technical",
+  "tab.wheel": "Wheel Strategy",
+
+  // Common
+  "common.selectStock": "Select Stock",
+  "common.targetDate": "Target Date",
+  "common.loading": "Analyzing...",
+  "common.error.selectStock": "Please select a stock first",
+  "common.error.requestFailed": "Request failed, please try again later",
+  "common.error.predictFailed": "Prediction failed",
+  "common.error.analyzeFailed": "Analysis failed",
+
+  // SingleTab
+  "single.startPredict": "Start Prediction",
+  "single.analyzing": "Analyzing, please wait...",
+  "single.result.title": "Prediction Results",
+  "single.result.currentPrice": "Current Price",
+  "single.result.gbmPrice": "GBM Predicted",
+  "single.result.mcPrice": "MC Predicted",
+  "single.result.prophetPrice": "Prophet Predicted",
+  "single.result.expectedReturn": "Expected Return",
+  "single.result.percentile5": "5th Percentile",
+  "single.result.percentile95": "95th Percentile",
+  "single.result.summaryTitle": "Statistical Summary",
+  "single.result.copied": "✓ Copied",
+  "single.result.copy": "📋 Copy",
+  "single.result.copyFailed": "Copy failed",
+
+  // BatchTab
+  "batch.selectStocks": "Select Stocks (multi-select)",
+  "batch.searchPlaceholder": "Search stocks...",
+  "batch.selected": "selected",
+  "batch.unit": "",
+  "batch.clear": "Clear",
+  "batch.startPredict": "Batch Predict",
+  "batch.analyzing": "Batch analyzing, please wait...",
+  "batch.error.selectAtLeast": "Please select at least one stock",
+  "batch.result.title": "Prediction Ranking (by Expected Return)",
+  "batch.table.stock": "Stock",
+  "batch.table.currentPrice": "Price",
+  "batch.table.gbmPredict": "GBM",
+  "batch.table.gbmReturn": "GBM Return",
+  "batch.table.mcPredict": "MC",
+  "batch.table.mcReturn": "MC Return",
+  "batch.table.volatility": "Volatility",
+  "batch.noMatch": "No results found",
+
+  // TechnicalTab
+  "technical.startAnalyze": "Start Analysis",
+  "technical.analyzing": "Computing technical indicators...",
+  "technical.score.title": "Composite Score",
+  "technical.score.bearish": "Bearish 0",
+  "technical.score.neutral": "Neutral 50",
+  "technical.score.bullish": "Bullish 100",
+  "technical.signals.title": "Indicator Signals",
+  "technical.pattern.title": "Candlestick Patterns",
+  "technical.priceTarget.title": "Price Targets",
+  "technical.priceTarget.stopLoss": "Stop Loss",
+  "technical.priceTarget.target": "Target",
+  "technical.advice.title": "Overall Advice",
+
+  // WheelTab
+  "wheel.costBasis": "Cost Basis ($)",
+  "wheel.costPlaceholder": "e.g. 150.00",
+  "wheel.startAnalyze": "Wheel Analysis",
+  "wheel.analyzing": "Fetching live data and analyzing...",
+  "wheel.error.costBasis": "Please enter a valid cost basis",
+  "wheel.overview": "Market Overview",
+  "wheel.currentPrice": "Current Price",
+  "wheel.ema20": "20-day EMA",
+  "wheel.emaDeviation": "EMA Deviation",
+  "wheel.emaTrend": "EMA Trend (5d)",
+  "wheel.volatility": "Annualized Vol",
+  "wheel.intraDrop": "Max Intraday Drop",
+  "wheel.gapChange": "Gap + Intraday",
+  "wheel.vShape": "V-Shape Reversal",
+  "wheel.shape": "Pattern",
+  "wheel.sellPut": "Sell Put Decision",
+  "wheel.sellPut.strike": "Recommended Strike",
+  "wheel.sellPut.distance": "Distance from Price",
+  "wheel.sellPut.cash": "Cash Required (1 lot)",
+  "wheel.sellPut.note": "* Recommended expiry: next Friday, 1 std dev OTM",
+  "wheel.coveredCall": "Covered Call Decision",
+  "wheel.coveredCall.cost": "Cost Basis",
+  "wheel.coveredCall.strike": "Recommended Strike",
+  "wheel.coveredCall.distance": "Distance from Price",
+  "wheel.coveredCall.note": "* If price stays below by next Friday close, you earn 100% premium and keep shares",
+
+  // StockSearch
+  "search.placeholder": "Search by ticker or name...",
+  "search.noMatch": "No results found. Try entering a ticker directly.",
+  "search.clear": "Clear",
+
+  // Footer
+  "footer.dataSource": "Data source: ",
+  "footer.disclaimer": "Predictions are for reference only and do not constitute investment advice.",
+
+  // Summary text keys
+  "summary.stockInfo": "Stock Information",
+  "summary.ticker": "Ticker",
+  "summary.name": "Company Name",
+  "summary.currentPrice": "Current Price",
+  "summary.targetDate": "Target Date",
+  "summary.tradingDays": "Trading Days",
+  "summary.days": "days",
+  "summary.gbm.title": "[GBM] Geometric Brownian Motion Results",
+  "summary.mc.title": "[MC] Monte Carlo Simulation Results",
+  "summary.prophet.title": "[Prophet] Time Series Forecast Results",
+  "summary.meanPrice": "Mean Price",
+  "summary.medianPrice": "Median Price",
+  "summary.std": "Std Dev",
+  "summary.ci": "5%-95% CI",
+  "summary.expectedReturn": "Expected Return",
+  "summary.prophet.price": "Predicted Price",
+  "summary.prophet.ci": "95% CI",
+  "summary.prophet.return": "Expected Return",
+  "summary.prophet.risk": "Risk Level",
+  "summary.risk.title": "Risk Assessment",
+  "summary.risk.volatility": "Annualized Volatility",
+};
+
+export default en;

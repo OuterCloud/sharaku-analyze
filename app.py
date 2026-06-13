@@ -421,13 +421,15 @@ async def predict_batch_stocks(
 @app.post("/api/technical/analyze")
 async def technical_analyze(
     ticker: str = Form(...),
+    lang: str = Form("zh"),
 ):
     """技术分析 API"""
     try:
         ticker = ticker.upper()
+        lang = lang if lang in ("zh", "en") else "zh"
 
         # Check cache
-        cache_key = f"technical:{ticker}"
+        cache_key = f"technical:{ticker}:{lang}"
         cached = _cache_get(cache_key)
         if cached:
             return JSONResponse(content=cached)
@@ -437,7 +439,7 @@ async def technical_analyze(
         if not stock_info:
             stock_db.add_stock(ticker, ticker, "", _detect_market(ticker, ""))
 
-        analyzer = TechnicalAnalyzer(ticker)
+        analyzer = TechnicalAnalyzer(ticker, lang=lang)
         result = analyzer.analyze()
 
         if result.get("success"):
@@ -457,18 +459,20 @@ async def technical_analyze(
 async def wheel_analyze(
     ticker: str = Form(...),
     cost_basis: float = Form(...),
+    lang: str = Form("zh"),
 ):
     """Wheel期权策略分析 API"""
     try:
         ticker = ticker.upper()
+        lang = lang if lang in ("zh", "en") else "zh"
 
         # Check cache
-        cache_key = f"wheel:{ticker}:{cost_basis}"
+        cache_key = f"wheel:{ticker}:{cost_basis}:{lang}"
         cached = _cache_get(cache_key)
         if cached:
             return JSONResponse(content=cached)
 
-        result = analyze_wheel_strategy(ticker, cost_basis)
+        result = analyze_wheel_strategy(ticker, cost_basis, lang=lang)
 
         if result.get("success"):
             _cache_set(cache_key, result)

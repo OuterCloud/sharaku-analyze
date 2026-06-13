@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { analyzeTechnical, TechnicalResult } from "../api/predict";
+import { useI18n } from "../i18n/context";
 import StockSearch from "./StockSearch";
 
 function signalColor(signal: string): string {
-  if (signal.startsWith("看多") || signal.startsWith("偏多")) return "#27ae60";
-  if (signal.startsWith("看空") || signal.startsWith("偏空")) return "#e74c3c";
+  if (signal.startsWith("看多") || signal.startsWith("偏多") || signal.startsWith("Bullish") || signal.startsWith("Slightly Bullish")) return "#27ae60";
+  if (signal.startsWith("看空") || signal.startsWith("偏空") || signal.startsWith("Bearish") || signal.startsWith("Slightly Bearish")) return "#e74c3c";
   return "#888";
 }
 
@@ -17,22 +18,22 @@ function scoreColor(score: number): string {
 }
 
 function adviceColor(advice: string): string {
-  if (advice.startsWith("看多")) return "#27ae60";
-  if (advice.startsWith("偏多")) return "#66bb6a";
-  if (advice.startsWith("看空")) return "#e74c3c";
-  if (advice.startsWith("偏空")) return "#ef5350";
+  if (advice.startsWith("看多") || advice.match(/^Bullish\b/)) return "#27ae60";
+  if (advice.startsWith("偏多") || advice.startsWith("Slightly Bullish")) return "#66bb6a";
+  if (advice.startsWith("看空") || advice.match(/^Bearish\b/)) return "#e74c3c";
+  if (advice.startsWith("偏空") || advice.startsWith("Slightly Bearish")) return "#ef5350";
   return "#ff9800";
 }
 
 function TechnicalResultView({ result }: { result: TechnicalResult }) {
   const signalEntries = Object.entries(result.signals);
+  const { t } = useI18n();
 
   return (
     <div style={{ marginTop: "20px" }}>
-      {/* Score */}
       <div className="result-card">
         <h3 className="result-title">
-          {result.ticker} 综合评分
+          {result.ticker} {t("technical.score.title")}
         </h3>
         <div className="ta-score-section">
           <div className="ta-score-number" style={{ color: scoreColor(result.score) }}>
@@ -49,20 +50,19 @@ function TechnicalResultView({ result }: { result: TechnicalResult }) {
             />
           </div>
           <div className="ta-score-labels">
-            <span>看空 0</span>
-            <span>中性 50</span>
-            <span>看多 100</span>
+            <span>{t("technical.score.bearish")}</span>
+            <span>{t("technical.score.neutral")}</span>
+            <span>{t("technical.score.bullish")}</span>
           </div>
         </div>
         <div className="stat-item" style={{ marginTop: "12px" }}>
-          <div className="stat-label">当前价格</div>
+          <div className="stat-label">{t("wheel.currentPrice")}</div>
           <div className="stat-value">${result.current_price.toFixed(2)}</div>
         </div>
       </div>
 
-      {/* Signals Grid */}
       <div className="result-card">
-        <h3 className="result-title">指标信号</h3>
+        <h3 className="result-title">{t("technical.signals.title")}</h3>
         <div className="ta-signals-grid">
           {signalEntries.map(([name, signal]) => (
             <div
@@ -79,10 +79,9 @@ function TechnicalResultView({ result }: { result: TechnicalResult }) {
         </div>
       </div>
 
-      {/* Candlestick Pattern */}
       {result.candlestick_pattern && (
         <div className="result-card">
-          <h3 className="result-title">K线形态识别</h3>
+          <h3 className="result-title">{t("technical.pattern.title")}</h3>
           <div
             className="ta-pattern-card"
             style={{ borderLeftColor: signalColor(result.candlestick_pattern.signal) }}
@@ -93,19 +92,18 @@ function TechnicalResultView({ result }: { result: TechnicalResult }) {
         </div>
       )}
 
-      {/* Price Targets */}
       {result.stop_loss !== undefined && result.target !== undefined && (
         <div className="result-card">
-          <h3 className="result-title">价格目标</h3>
+          <h3 className="result-title">{t("technical.priceTarget.title")}</h3>
           <div className="stats-grid">
             <div className="stat-item">
-              <div className="stat-label">止损位</div>
+              <div className="stat-label">{t("technical.priceTarget.stopLoss")}</div>
               <div className="stat-value negative">
                 ${result.stop_loss.toFixed(2)}
               </div>
             </div>
             <div className="stat-item">
-              <div className="stat-label">目标位</div>
+              <div className="stat-label">{t("technical.priceTarget.target")}</div>
               <div className="stat-value positive">
                 ${result.target.toFixed(2)}
               </div>
@@ -114,9 +112,8 @@ function TechnicalResultView({ result }: { result: TechnicalResult }) {
         </div>
       )}
 
-      {/* Advice */}
       <div className="result-card">
-        <h3 className="result-title">综合建议</h3>
+        <h3 className="result-title">{t("technical.advice.title")}</h3>
         <div
           className="ta-advice-card"
           style={{ borderLeftColor: adviceColor(result.advice) }}
@@ -125,7 +122,6 @@ function TechnicalResultView({ result }: { result: TechnicalResult }) {
         </div>
       </div>
 
-      {/* Warning */}
       <div className="ta-warning">{result.warning}</div>
     </div>
   );
@@ -136,39 +132,55 @@ export default function TechnicalTab() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState<TechnicalResult | null>(null);
+  const { lang, t } = useI18n();
+  const prevLang = useRef(lang);
 
-  function handleSelect(t: string) {
-    setTicker(t);
+  function handleSelect(tk: string) {
+    setTicker(tk);
     setResult(null);
     setError("");
   }
 
-  async function handleAnalyze() {
-    if (!ticker) {
-      setError("请先选择股票");
-      return;
+  // Re-fetch when language changes and we already have results
+  useEffect(() => {
+    if (prevLang.current !== lang && ticker && result) {
+      prevLang.current = lang;
+      doAnalyze(ticker, lang);
+    } else {
+      prevLang.current = lang;
     }
+  }, [lang]);
+
+  async function doAnalyze(tk: string, l: string) {
     setLoading(true);
     setError("");
     setResult(null);
     try {
-      const data = await analyzeTechnical(ticker);
+      const data = await analyzeTechnical(tk, l);
       if (!data.success) {
-        setError(data.error || "分析失败");
+        setError(data.error || t("common.error.analyzeFailed"));
         return;
       }
       setResult(data);
     } catch {
-      setError("请求失败，请稍后重试");
+      setError(t("common.error.requestFailed"));
     } finally {
       setLoading(false);
     }
   }
 
+  async function handleAnalyze() {
+    if (!ticker) {
+      setError(t("common.error.selectStock"));
+      return;
+    }
+    doAnalyze(ticker, lang);
+  }
+
   return (
     <div className="tab-content">
       <div className="form-group">
-        <label>选择股票</label>
+        <label>{t("common.selectStock")}</label>
         <StockSearch onSelect={handleSelect} />
       </div>
 
@@ -177,13 +189,13 @@ export default function TechnicalTab() {
         disabled={loading}
         onClick={handleAnalyze}
       >
-        {loading ? "分析中..." : "开始分析"}
+        {loading ? t("common.loading") : t("technical.startAnalyze")}
       </button>
 
       {loading && (
         <div className="loading">
           <div className="spinner"></div>
-          <p>正在计算技术指标...</p>
+          <p>{t("technical.analyzing")}</p>
         </div>
       )}
 

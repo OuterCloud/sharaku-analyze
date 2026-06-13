@@ -5,6 +5,7 @@ import Header from "./components/Header";
 import SingleTab from "./components/SingleTab";
 import TechnicalTab from "./components/TechnicalTab";
 import WheelTab from "./components/WheelTab";
+import { useI18n } from "./i18n/context";
 
 type Tab = "single" | "batch" | "wheel" | "technical";
 
@@ -14,6 +15,7 @@ const defaultDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>("single");
+  const { t } = useI18n();
 
   return (
     <div className="container">
@@ -25,25 +27,25 @@ export default function App() {
             className={`tab${activeTab === "single" ? " active" : ""}`}
             onClick={() => setActiveTab("single")}
           >
-            单股预测
+            {t("tab.single")}
           </button>
           <button
             className={`tab${activeTab === "batch" ? " active" : ""}`}
             onClick={() => setActiveTab("batch")}
           >
-            批量预测
+            {t("tab.batch")}
           </button>
           <button
             className={`tab${activeTab === "technical" ? " active" : ""}`}
             onClick={() => setActiveTab("technical")}
           >
-            技术分析
+            {t("tab.technical")}
           </button>
           <button
             className={`tab${activeTab === "wheel" ? " active" : ""}`}
             onClick={() => setActiveTab("wheel")}
           >
-            Wheel策略
+            {t("tab.wheel")}
           </button>
         </div>
 

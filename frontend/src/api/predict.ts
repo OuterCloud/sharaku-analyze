@@ -117,8 +117,8 @@ export interface WheelResult {
   error?: string
 }
 
-export async function analyzeWheel(ticker: string, costBasis: number): Promise<WheelResult> {
-  const res = await post('/api/wheel/analyze', { ticker, cost_basis: String(costBasis) })
+export async function analyzeWheel(ticker: string, costBasis: number, lang: string = "zh"): Promise<WheelResult> {
+  const res = await post('/api/wheel/analyze', { ticker, cost_basis: String(costBasis), lang })
   return res.json()
 }
 
@@ -165,7 +165,7 @@ export interface TechnicalResult {
   error?: string
 }
 
-export async function analyzeTechnical(ticker: string): Promise<TechnicalResult> {
-  const res = await post('/api/technical/analyze', { ticker })
+export async function analyzeTechnical(ticker: string, lang: string = "zh"): Promise<TechnicalResult> {
+  const res = await post('/api/technical/analyze', { ticker, lang })
   return res.json()
 }
