@@ -47,7 +47,7 @@ ${t("summary.prophet.title")}
 ${t("summary.prophet.price")}: $${r.prophet.mean_price.toFixed(2)}
 ${t("summary.prophet.ci")}: $${r.prophet.lower_bound.toFixed(2)} - $${r.prophet.upper_bound.toFixed(2)}
 ${t("summary.prophet.return")}: ${r.prophet.return.toFixed(2)}%
-${t("summary.prophet.risk")}: ${r.prophet.risk_level}`;
+${t("summary.prophet.risk")}: ${t(`summary.prophet.risk.${r.prophet.risk_level}` as any)}`;
     }
 
     text += `
@@ -142,6 +142,11 @@ ${t("summary.risk.volatility")}: ${(r.volatility * 100).toFixed(2)}%`;
       {result.mc_cumulative_returns_chart && (
         <div className="result-card">
           <img src={`data:image/png;base64,${result.mc_cumulative_returns_chart}`} alt="cumulative returns" style={{ width: "100%" }} />
+        </div>
+      )}
+      {result.prophet_chart && (
+        <div className="result-card">
+          <img src={`data:image/png;base64,${result.prophet_chart}`} alt="prophet forecast" style={{ width: "100%" }} />
         </div>
       )}
     </div>

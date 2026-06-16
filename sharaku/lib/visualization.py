@@ -21,7 +21,7 @@ plt.rcParams["axes.unicode_minus"] = False
 
 
 def generate_prediction_chart(
-    ticker, current_price, gbm_prices, mc_prices, target_date
+    ticker, current_price, gbm_prices, mc_prices, target_date, prophet_result=None
 ):
     """生成单个股票的预测图表，返回 (base64, stats_data)"""
     fig, axes = plt.subplots(2, 2, figsize=(14, 10))
@@ -41,6 +41,11 @@ def generate_prediction_chart(
         np.mean(gbm_prices), color="red", linestyle="--", linewidth=2,
         label=f"Mean: ${np.mean(gbm_prices):.2f}",
     )
+    if prophet_result:
+        axes[0, 0].axvline(
+            prophet_result["mean_price"], color="purple", linestyle=":", linewidth=2,
+            label=f"Prophet: ${prophet_result['mean_price']:.2f}",
+        )
     axes[0, 0].set_xlabel("Price ($)")
     axes[0, 0].set_ylabel("Frequency")
     axes[0, 0].set_title("GBM Price Distribution")
@@ -57,6 +62,11 @@ def generate_prediction_chart(
         np.mean(mc_prices), color="red", linestyle="--", linewidth=2,
         label=f"Mean: ${np.mean(mc_prices):.2f}",
     )
+    if prophet_result:
+        axes[0, 1].axvline(
+            prophet_result["mean_price"], color="purple", linestyle=":", linewidth=2,
+            label=f"Prophet: ${prophet_result['mean_price']:.2f}",
+        )
     axes[0, 1].set_xlabel("Price ($)")
     axes[0, 1].set_ylabel("Frequency")
     axes[0, 1].set_title("MC Price Distribution")
@@ -73,6 +83,11 @@ def generate_prediction_chart(
     axes[1, 0].bar(x - width / 2, gbm_percentiles, width, label="GBM", alpha=0.7)
     axes[1, 0].bar(x + width / 2, mc_percentiles, width, label="MC", alpha=0.7)
     axes[1, 0].axhline(current_price, color="green", linestyle="--", linewidth=1, label="Current")
+    if prophet_result:
+        axes[1, 0].axhline(
+            prophet_result["mean_price"], color="purple", linestyle=":", linewidth=2,
+            label=f"Prophet: ${prophet_result['mean_price']:.2f}",
+        )
     axes[1, 0].set_xlabel("Percentile")
     axes[1, 0].set_ylabel("Price ($)")
     axes[1, 0].set_title("Price Percentile Comparison")
@@ -83,8 +98,7 @@ def generate_prediction_chart(
 
     # 4. 统计摘要
     axes[1, 1].axis("off")
-    summary_text = f"""
-    Prediction Summary
+    summary_text = f"""    Prediction Summary
     {'=' * 30}
 
     [GBM] Geometric Brownian Motion
@@ -99,9 +113,21 @@ def generate_prediction_chart(
     Median: ${np.median(mc_prices):.2f}
     Std Dev: ${np.std(mc_prices):.2f}
     5%-95% Range:
-      ${np.percentile(mc_prices, 5):.2f} - ${np.percentile(mc_prices, 95):.2f}
-    """
-    axes[1, 1].text(0.1, 0.5, summary_text, fontsize=10, verticalalignment="center")
+      ${np.percentile(mc_prices, 5):.2f} - ${np.percentile(mc_prices, 95):.2f}"""
+
+    if prophet_result:
+        risk_map = {"low": "Low", "medium": "Medium", "high": "High"}
+        risk_display = risk_map.get(prophet_result.get("risk_level", ""), prophet_result.get("risk_level", "N/A"))
+        summary_text += f"""
+
+    [Prophet] Time Series Forecast
+    Prediction: ${prophet_result['mean_price']:.2f}
+    95% CI: ${prophet_result['lower_bound']:.2f} - ${prophet_result['upper_bound']:.2f}
+    Expected Return: {prophet_result['return']:.2f}%
+    Risk Level: {risk_display}"""
+
+    axes[1, 1].text(0.05, 0.5, summary_text, fontsize=9, verticalalignment="center",
+                    fontfamily="monospace")
 
     plt.tight_layout()
 
@@ -226,6 +252,89 @@ def generate_cumulative_returns_chart(ticker, current_price, mc_predictions, tar
     plt.close()
 
     return image_base64
+
+
+def generate_prophet_chart(ticker, prophet_predictions, current_price):
+    """生成 Prophet 预测趋势图（历史 + 预测 + 置信区间）"""
+    forecast_df = prophet_predictions.get("forecast_df")
+    if forecast_df is None:
+        return ""
+
+    try:
+        fig, ax = plt.subplots(figsize=(12, 6))
+
+        # Split into historical (fitted) and future (forecast)
+        n_total = len(forecast_df)
+        days_ahead = prophet_predictions.get("days", 30)
+        n_hist = n_total - days_ahead
+
+        hist_df = forecast_df.iloc[:n_hist]
+        future_df = forecast_df.iloc[n_hist:]
+
+        # Plot historical fitted line
+        ax.plot(hist_df["ds"], hist_df["yhat"], color="steelblue", linewidth=1.5,
+                alpha=0.7, label="Fitted")
+
+        # Plot future forecast
+        ax.plot(future_df["ds"], future_df["yhat"], color="darkorange", linewidth=2.5,
+                label=f"Forecast (mean: ${prophet_predictions['prediction']:.2f})")
+
+        # Confidence interval for future
+        ax.fill_between(
+            future_df["ds"],
+            future_df["yhat_lower"],
+            future_df["yhat_upper"],
+            color="orange", alpha=0.2,
+            label=f"95% CI: ${prophet_predictions['lower_bound']:.2f} - ${prophet_predictions['upper_bound']:.2f}",
+        )
+
+        # Light confidence band for historical
+        ax.fill_between(
+            hist_df["ds"],
+            hist_df["yhat_lower"],
+            hist_df["yhat_upper"],
+            color="steelblue", alpha=0.08,
+        )
+
+        # Current price line
+        ax.axhline(y=current_price, color="green", linestyle="--", linewidth=1.5,
+                   label=f"Current: ${current_price:.2f}")
+
+        # Vertical line at forecast start
+        if len(future_df) > 0:
+            ax.axvline(x=future_df["ds"].iloc[0], color="gray", linestyle=":",
+                       linewidth=1, alpha=0.7)
+
+        expected_return = prophet_predictions.get("expected_return", 0)
+        sign = "+" if expected_return >= 0 else ""
+        ax.set_title(
+            f"{ticker} Prophet Forecast ({days_ahead} days, expected: {sign}{expected_return:.2f}%)",
+            fontsize=14, fontweight="bold",
+        )
+        ax.set_xlabel("Date", fontsize=11)
+        ax.set_ylabel("Price ($)", fontsize=11)
+        ax.grid(True, alpha=0.3)
+        ax.legend(loc="upper left", fontsize=10)
+
+        # Only show last 120 days of history + future for readability
+        if n_hist > 120:
+            start_idx = n_hist - 120
+            visible_df = forecast_df.iloc[start_idx:]
+            ax.set_xlim(visible_df["ds"].iloc[0], visible_df["ds"].iloc[-1])
+
+        plt.tight_layout()
+
+        buffer = io.BytesIO()
+        plt.savefig(buffer, format="png", dpi=120, bbox_inches="tight")
+        buffer.seek(0)
+        image_base64 = base64.b64encode(buffer.read()).decode()
+        plt.close()
+
+        return image_base64
+    except Exception as e:
+        logger.debug(f"Prophet chart generation failed: {e}")
+        plt.close("all")
+        return ""
 
 
 def generate_batch_chart(results, target_date):

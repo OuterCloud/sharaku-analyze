@@ -201,11 +201,11 @@ class ProphetPredictor(BasePredictor):
             volatility = confidence_width / 4
 
         if uncertainty < 20:
-            risk_level = "低"
+            risk_level = "low"
         elif uncertainty < 40:
-            risk_level = "中"
+            risk_level = "medium"
         else:
-            risk_level = "高"
+            risk_level = "high"
 
         return {
             "uncertainty": float(uncertainty),

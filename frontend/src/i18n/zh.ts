@@ -3,6 +3,7 @@ const zh = {
   "header.subtitle": "股票多维预测分析",
 
   // Tabs
+  "tab.market": "行情排行",
   "tab.single": "单股预测",
   "tab.batch": "批量预测",
   "tab.technical": "技术分析",
@@ -93,6 +94,29 @@ const zh = {
   "wheel.coveredCall.distance": "距当前价",
   "wheel.coveredCall.note": "* 若下周五收盘前未冲破该位置，你将躺赚100%期权费并保留正股底仓",
 
+  // MarketTab
+  "market.lastUpdate": "最后更新",
+  "market.refresh": "刷新",
+  "market.loading": "正在获取实时行情...",
+  "market.closedNotice": "数据截至盘后收盘，非实时",
+  "market.empty": "暂无数据，请稍后重试。",
+  "market.stocks": "只",
+  "market.cat.gainers": "涨幅榜",
+  "market.cat.losers": "跌幅榜",
+  "market.cat.actives": "成交活跃",
+  "market.table.stock": "股票",
+  "market.table.price": "当前价格",
+  "market.table.change": "涨跌额",
+  "market.table.changePct": "涨跌幅",
+  "market.table.volume": "成交量",
+  "market.table.gbm1W": "GBM 1W",
+  "market.table.mc1W": "MC 1W",
+  "market.table.prophet1W": "P 1W",
+  "market.table.gbm1M": "GBM 1M",
+  "market.table.mc1M": "MC 1M",
+  "market.table.prophet1M": "P 1M",
+  "market.predicting": "预测加载中...",
+
   // StockSearch
   "search.placeholder": "输入股票代码或名称搜索...",
   "search.noMatch": "无匹配结果，可直接输入代码回车验证",
@@ -122,6 +146,9 @@ const zh = {
   "summary.prophet.ci": "95%置信区间",
   "summary.prophet.return": "预期收益率",
   "summary.prophet.risk": "风险等级",
+  "summary.prophet.risk.low": "低",
+  "summary.prophet.risk.medium": "中",
+  "summary.prophet.risk.high": "高",
   "summary.risk.title": "风险评估",
   "summary.risk.volatility": "年化波动率",
 } as const;

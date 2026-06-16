@@ -3,15 +3,15 @@
 Sharaku Analyze - 股票智能预测分析 Web 服务
 """
 
-import time
 import warnings
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Optional
 
 import pandas as pd
 import uvicorn
+from diskcache import Cache
 from dotenv import load_dotenv
 from fastapi import FastAPI, Form, HTTPException
 from fastapi.responses import JSONResponse
@@ -19,11 +19,13 @@ from fastapi.staticfiles import StaticFiles
 from loguru import logger
 
 from sharaku import DataUtils, GBMPredictor, MonteCarloPredictor, ProphetPredictor, StockDatabase, TechnicalAnalyzer, analyze_wheel_strategy
+from sharaku.lib.market_session import fetch_us_market_movers, fetch_us_market_movers_by_tickers, get_us_market_session
 from sharaku.lib.visualization import (
     generate_batch_chart,
     generate_cumulative_returns_chart,
     generate_monte_carlo_paths_chart,
     generate_prediction_chart,
+    generate_prophet_chart,
 )
 
 load_dotenv()
@@ -31,22 +33,18 @@ load_dotenv()
 # Disable matplotlib warnings
 warnings.filterwarnings("ignore", category=UserWarning, module="matplotlib")
 
-# --- In-memory cache with TTL ---
-_cache: Dict[str, dict] = {}
+# --- Disk cache with TTL ---
+_cache_dir = Path(__file__).parent / ".cache" / "predictions"
+_cache = Cache(str(_cache_dir))
 CACHE_TTL = 3600  # 1 hour
 
 
 def _cache_get(key: str) -> Optional[dict]:
-    entry = _cache.get(key)
-    if entry and time.time() - entry["ts"] < CACHE_TTL:
-        return entry["data"]
-    if entry:
-        del _cache[key]
-    return None
+    return _cache.get(key)
 
 
 def _cache_set(key: str, data: dict):
-    _cache[key] = {"data": data, "ts": time.time()}
+    _cache.set(key, data, expire=CACHE_TTL)
 
 
 # --- Market detection ---
@@ -241,6 +239,7 @@ async def predict_single_stock(
 
         # Prophet prediction (optional)
         prophet_result = None
+        prophet_chart_base64 = ""
         try:
             prophet = ProphetPredictor(ticker)
             prophet.fit(prepared_data["raw_data"])
@@ -257,6 +256,11 @@ async def predict_single_stock(
                 "risk_level": prophet_risk["risk_level"],
                 "trend_change": float(prophet_trend.get("trend_change_pct", 0)),
             }
+
+            # Generate Prophet forecast chart
+            prophet_chart_base64 = generate_prophet_chart(
+                ticker, prophet_predictions, float(current_price)
+            )
         except Exception as prophet_error:
             logger.debug(f"Prophet prediction skipped: {prophet_error}")
 
@@ -266,6 +270,7 @@ async def predict_single_stock(
             gbm_predictions["final_prices"],
             mc_predictions["final_prices"],
             target_date,
+            prophet_result=prophet_result,
         )
 
         mc_paths_chart_base64 = generate_monte_carlo_paths_chart(
@@ -302,6 +307,7 @@ async def predict_single_stock(
             "chart": chart_base64,
             "mc_paths_chart": mc_paths_chart_base64,
             "mc_cumulative_returns_chart": mc_cumulative_returns_chart_base64,
+            "prophet_chart": prophet_chart_base64,
             "stats_summary": stats_data,
         }
 
@@ -415,6 +421,122 @@ async def predict_batch_stocks(
         return JSONResponse(content={"success": False, "error": str(e)}, status_code=500)
 
 
+# ==================== Quick Batch Prediction ====================
+
+# Detect Prophet availability once at startup
+_PROPHET_AVAILABLE = False
+try:
+    import prophet as _prophet_mod  # noqa: F401
+    _PROPHET_AVAILABLE = True
+except ImportError:
+    pass
+
+
+def _quick_predict_one(ticker: str, target_date: str) -> Optional[dict]:
+    """预测单只股票的 GBM/MC/Prophet，带 per-ticker 缓存"""
+    cache_key = f"qp:{ticker}:{target_date}"
+    cached = _cache_get(cache_key)
+    if cached:
+        return cached
+
+    end_date = datetime.now().strftime("%Y-%m-%d")
+    start_date = (datetime.now() - timedelta(days=730)).strftime("%Y-%m-%d")
+
+    data_utils = DataUtils()
+    prepared_data = data_utils.prepare_model_data(ticker, start_date, end_date)
+
+    latest_prices = data_utils.get_latest_price_info(ticker)
+    current_price = (
+        latest_prices["current_price"]
+        or prepared_data["statistics"]["current_price"]
+    )
+
+    target_dt = datetime.strptime(target_date, "%Y-%m-%d")
+    last_date = prepared_data["close_prices"].index[-1]
+    if hasattr(last_date, "date"):
+        last_date = last_date.date()
+    else:
+        last_date = pd.to_datetime(last_date).date()
+    trading_days = (target_dt.date() - last_date).days
+
+    if trading_days <= 0:
+        return None
+
+    cur = float(current_price)
+
+    # GBM with 50k simulations
+    gbm = GBMPredictor(ticker)
+    gbm.fit(prepared_data["raw_data"])
+    gbm_predictions = gbm.predict(target_date, n_simulations=50000)
+    gbm_risk = gbm.analyze_risk(gbm_predictions)
+    gbm_price = float(gbm_risk["mean_price"])
+
+    # Monte Carlo with 50k paths
+    mc = MonteCarloPredictor(ticker)
+    mc.fit(prepared_data["raw_data"])
+    mc_predictions = mc.predict(days=trading_days, n_paths=50000)
+    mc_risk = mc.analyze_risk(mc_predictions)
+    mc_price = float(mc_risk["mean_price"])
+
+    # Prophet (skip entirely if not installed)
+    prophet_price = None
+    prophet_ret = None
+    if _PROPHET_AVAILABLE:
+        try:
+            p = ProphetPredictor(ticker)
+            p.fit(prepared_data["raw_data"])
+            prophet_predictions = p.predict(days=trading_days)
+            prophet_price = float(prophet_predictions["prediction"])
+            prophet_ret = (prophet_price - cur) / cur if cur > 0 else None
+        except Exception as prophet_err:
+            logger.debug(f"Quick Prophet {ticker} skipped: {prophet_err}")
+
+    # Compute returns relative to live current price
+    result = {
+        "ticker": ticker,
+        "current_price": cur,
+        "gbm_mean_price": gbm_price,
+        "gbm_return": (gbm_price - cur) / cur if cur > 0 else 0.0,
+        "mc_mean_price": mc_price,
+        "mc_return": (mc_price - cur) / cur if cur > 0 else 0.0,
+        "prophet_mean_price": prophet_price,
+        "prophet_return": prophet_ret,
+    }
+    _cache_set(cache_key, result)
+    return result
+
+
+@app.get("/api/predict/quick-batch")
+async def predict_quick_batch(
+    tickers: str = "",
+    target_date: str = "",
+):
+    """轻量批量预测 - 跑 GBM/MC/Prophet 三模型，用于行情表异步加载（per-ticker 缓存）"""
+    try:
+        if not tickers.strip() or not target_date.strip():
+            return JSONResponse(content={"success": False, "error": "Missing tickers or target_date"}, status_code=400)
+
+        ticker_list = [t.strip().upper() for t in tickers.split(",") if t.strip()]
+        if not ticker_list:
+            return JSONResponse(content={"success": True, "results": []})
+
+        results = []
+        for ticker in ticker_list:
+            try:
+                item = _quick_predict_one(ticker, target_date)
+                if item:
+                    results.append(item)
+            except Exception as e:
+                logger.debug(f"Quick predict {ticker} skipped: {e}")
+                continue
+
+        return JSONResponse(content={"success": True, "results": results})
+
+    except Exception as e:
+        logger.error(f"Quick batch prediction failed: {e}")
+        return JSONResponse(content={"success": False, "error": str(e)}, status_code=500)
+
+
 # ==================== Technical Analysis ====================
 
 
@@ -481,6 +603,56 @@ async def wheel_analyze(
 
     except Exception as e:
         logger.error(f"Wheel analysis failed: {e}")
+        return JSONResponse(content={"success": False, "error": str(e)}, status_code=500)
+
+
+# ==================== Market Session & Movers ====================
+
+
+@app.get("/api/market/session")
+async def market_session():
+    """获取当前美股交易时段"""
+    try:
+        session = get_us_market_session()
+        return JSONResponse(content={"success": True, **session})
+    except Exception as e:
+        logger.error(f"Market session detection failed: {e}")
+        return JSONResponse(content={"success": False, "error": str(e)}, status_code=500)
+
+
+@app.get("/api/market/movers")
+async def market_movers(category: str = "all", tickers: str = ""):
+    """
+    获取美股涨跌幅排行。
+    category: gainers / losers / actives / all（动态获取 Yahoo Finance 实时榜单）
+    tickers: 可选，逗号分隔的自选股票代码列表
+    """
+    try:
+        session_info = get_us_market_session()
+
+        if tickers.strip():
+            # 自选模式：按用户指定的 tickers 查询
+            ticker_list = [t.strip().upper() for t in tickers.split(",") if t.strip()]
+            movers = fetch_us_market_movers_by_tickers(ticker_list[:50])
+            return JSONResponse(content={
+                "success": True,
+                "session": session_info,
+                "data": {"custom": movers},
+                "mode": "custom",
+            })
+
+        # 动态获取 Yahoo Finance 实时榜单
+        data = fetch_us_market_movers(category=category, count=100)
+
+        return JSONResponse(content={
+            "success": True,
+            "session": session_info,
+            "data": data,
+            "mode": "screener",
+        })
+
+    except Exception as e:
+        logger.error(f"Market movers failed: {e}")
         return JSONResponse(content={"success": False, "error": str(e)}, status_code=500)
 
 

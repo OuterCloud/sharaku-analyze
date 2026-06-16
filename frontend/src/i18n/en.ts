@@ -5,6 +5,7 @@ const en: Record<TranslationKey, string> = {
   "header.subtitle": "Multi-Model Stock Prediction & Analysis",
 
   // Tabs
+  "tab.market": "Market Movers",
   "tab.single": "Single Stock",
   "tab.batch": "Batch Predict",
   "tab.technical": "Technical",
@@ -95,6 +96,29 @@ const en: Record<TranslationKey, string> = {
   "wheel.coveredCall.distance": "Distance from Price",
   "wheel.coveredCall.note": "* If price stays below by next Friday close, you earn 100% premium and keep shares",
 
+  // MarketTab
+  "market.lastUpdate": "Last update",
+  "market.refresh": "Refresh",
+  "market.loading": "Fetching live market data...",
+  "market.closedNotice": "Data as of after-hours close, not real-time",
+  "market.empty": "No data available. Please try again later.",
+  "market.stocks": "stocks",
+  "market.cat.gainers": "Top Gainers",
+  "market.cat.losers": "Top Losers",
+  "market.cat.actives": "Most Active",
+  "market.table.stock": "Stock",
+  "market.table.price": "Price",
+  "market.table.change": "Change",
+  "market.table.changePct": "Change %",
+  "market.table.volume": "Volume",
+  "market.table.gbm1W": "GBM 1W",
+  "market.table.mc1W": "MC 1W",
+  "market.table.prophet1W": "P 1W",
+  "market.table.gbm1M": "GBM 1M",
+  "market.table.mc1M": "MC 1M",
+  "market.table.prophet1M": "P 1M",
+  "market.predicting": "Predicting...",
+
   // StockSearch
   "search.placeholder": "Search by ticker or name...",
   "search.noMatch": "No results found. Try entering a ticker directly.",
@@ -124,6 +148,9 @@ const en: Record<TranslationKey, string> = {
   "summary.prophet.ci": "95% CI",
   "summary.prophet.return": "Expected Return",
   "summary.prophet.risk": "Risk Level",
+  "summary.prophet.risk.low": "Low",
+  "summary.prophet.risk.medium": "Medium",
+  "summary.prophet.risk.high": "High",
   "summary.risk.title": "Risk Assessment",
   "summary.risk.volatility": "Annualized Volatility",
 };

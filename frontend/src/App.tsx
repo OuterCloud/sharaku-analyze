@@ -2,19 +2,20 @@ import { useState } from "react";
 import BatchTab from "./components/BatchTab";
 import Footer from "./components/Footer";
 import Header from "./components/Header";
+import MarketTab from "./components/MarketTab";
 import SingleTab from "./components/SingleTab";
 import TechnicalTab from "./components/TechnicalTab";
 import WheelTab from "./components/WheelTab";
 import { useI18n } from "./i18n/context";
 
-type Tab = "single" | "batch" | "wheel" | "technical";
+type Tab = "market" | "single" | "batch" | "wheel" | "technical";
 
 const defaultDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
   .toISOString()
   .slice(0, 10);
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<Tab>("single");
+  const [activeTab, setActiveTab] = useState<Tab>("market");
   const { t } = useI18n();
 
   return (
@@ -23,6 +24,12 @@ export default function App() {
 
       <div className="content">
         <div className="tabs">
+          <button
+            className={`tab${activeTab === "market" ? " active" : ""}`}
+            onClick={() => setActiveTab("market")}
+          >
+            {t("tab.market")}
+          </button>
           <button
             className={`tab${activeTab === "single" ? " active" : ""}`}
             onClick={() => setActiveTab("single")}
@@ -50,6 +57,9 @@ export default function App() {
         </div>
 
         <div className="tab-contents">
+          <div style={{ display: activeTab === "market" ? "block" : "none" }}>
+            <MarketTab />
+          </div>
           <div style={{ display: activeTab === "single" ? "block" : "none" }}>
             <SingleTab defaultDate={defaultDate} />
           </div>

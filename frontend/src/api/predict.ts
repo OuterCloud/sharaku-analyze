@@ -32,6 +32,7 @@ export interface SinglePredictResult {
   chart?: string
   mc_paths_chart?: string
   mc_cumulative_returns_chart?: string
+  prophet_chart?: string
   volatility: number
   stats_summary?: StatsSummary
   error?: string
@@ -167,5 +168,69 @@ export interface TechnicalResult {
 
 export async function analyzeTechnical(ticker: string, lang: string = "zh"): Promise<TechnicalResult> {
   const res = await post('/api/technical/analyze', { ticker, lang })
+  return res.json()
+}
+
+// Market Session & Movers
+export interface MarketSession {
+  session: 'pre_market' | 'regular' | 'after_hours' | 'overnight' | 'closed'
+  label_zh: string
+  label_en: string
+  is_trading: boolean
+  eastern_time: string
+  date: string
+}
+
+export interface MarketMover {
+  ticker: string
+  name: string
+  price: number
+  change: number
+  change_pct: number
+  prev_close: number
+  volume: number
+  market_cap: number
+  ref_label_zh: string
+  ref_label_en: string
+}
+
+export interface MarketMoversResult {
+  success: boolean
+  session: MarketSession
+  data: {
+    gainers?: MarketMover[]
+    losers?: MarketMover[]
+    actives?: MarketMover[]
+    custom?: MarketMover[]
+  }
+  mode: 'screener' | 'custom'
+  error?: string
+}
+
+export async function getMarketMovers(category: string = 'all'): Promise<MarketMoversResult> {
+  const res = await fetch(`/api/market/movers?category=${category}&_t=${Date.now()}`)
+  return res.json()
+}
+
+// Quick batch prediction (GBM + MC + Prophet)
+export interface QuickPredictItem {
+  ticker: string
+  current_price: number
+  gbm_mean_price: number
+  gbm_return: number
+  mc_mean_price: number
+  mc_return: number
+  prophet_mean_price: number | null
+  prophet_return: number | null
+}
+
+export interface QuickBatchResult {
+  success: boolean
+  results: QuickPredictItem[]
+  error?: string
+}
+
+export async function predictQuickBatch(tickers: string[], targetDate: string): Promise<QuickBatchResult> {
+  const res = await fetch(`/api/predict/quick-batch?tickers=${encodeURIComponent(tickers.join(','))}&target_date=${encodeURIComponent(targetDate)}`)
   return res.json()
 }
