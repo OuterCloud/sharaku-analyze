@@ -26,8 +26,8 @@ type PredictionsMap = Record<string, { week?: ModelPredictions; month?: ModelPre
 
 type SortKey =
   | "price" | "change" | "change_pct" | "volume"
-  | "gbm_w" | "mc_w" | "prophet_w"
-  | "gbm_m" | "mc_m" | "prophet_m";
+  | "gbm_w" | "mc_w"
+  | "gbm_m" | "mc_m";
 
 type SortDir = "asc" | "desc";
 
@@ -199,10 +199,8 @@ export default function MarketTab() {
         case "volume": va = a.volume; vb = b.volume; break;
         case "gbm_w": va = getPredReturn(a.ticker, "week", "gbm"); vb = getPredReturn(b.ticker, "week", "gbm"); break;
         case "mc_w": va = getPredReturn(a.ticker, "week", "mc"); vb = getPredReturn(b.ticker, "week", "mc"); break;
-        case "prophet_w": va = getPredReturn(a.ticker, "week", "prophet"); vb = getPredReturn(b.ticker, "week", "prophet"); break;
         case "gbm_m": va = getPredReturn(a.ticker, "month", "gbm"); vb = getPredReturn(b.ticker, "month", "gbm"); break;
         case "mc_m": va = getPredReturn(a.ticker, "month", "mc"); vb = getPredReturn(b.ticker, "month", "mc"); break;
-        case "prophet_m": va = getPredReturn(a.ticker, "month", "prophet"); vb = getPredReturn(b.ticker, "month", "prophet"); break;
       }
 
       // Nulls go to bottom
@@ -375,17 +373,11 @@ export default function MarketTab() {
                   <th className="sortable" onClick={() => handleSort("mc_w")}>
                     {t("market.table.mc1W")} {sortIndicator("mc_w")}
                   </th>
-                  <th className="sortable" onClick={() => handleSort("prophet_w")}>
-                    {t("market.table.prophet1W")} {sortIndicator("prophet_w")}
-                  </th>
                   <th className="sortable" onClick={() => handleSort("gbm_m")}>
                     {t("market.table.gbm1M")} {sortIndicator("gbm_m")}
                   </th>
                   <th className="sortable" onClick={() => handleSort("mc_m")}>
                     {t("market.table.mc1M")} {sortIndicator("mc_m")}
-                  </th>
-                  <th className="sortable" onClick={() => handleSort("prophet_m")}>
-                    {t("market.table.prophet1M")} {sortIndicator("prophet_m")}
                   </th>
                 </tr>
               </thead>
@@ -412,10 +404,8 @@ export default function MarketTab() {
                     <td>{formatVolume(m.volume)}</td>
                     {renderPredictCell(m.ticker, "week", "gbm")}
                     {renderPredictCell(m.ticker, "week", "mc")}
-                    {renderPredictCell(m.ticker, "week", "prophet")}
                     {renderPredictCell(m.ticker, "month", "gbm")}
                     {renderPredictCell(m.ticker, "month", "mc")}
-                    {renderPredictCell(m.ticker, "month", "prophet")}
                   </tr>
                 ))}
               </tbody>
