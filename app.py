@@ -83,6 +83,33 @@ def _detect_market(ticker: str, exchange: str) -> str:
     return "US"
 
 
+# --- Helpers ---
+
+MAX_BATCH_TICKERS = 20
+
+
+def _validate_target_date(target_date: str) -> datetime:
+    """校验并解析目标日期，非法格式抛 HTTPException"""
+    try:
+        dt = datetime.strptime(target_date, "%Y-%m-%d")
+    except ValueError:
+        raise HTTPException(status_code=400, detail=f"日期格式错误，需要 YYYY-MM-DD: {target_date}")
+    if dt.date() <= datetime.now().date():
+        raise HTTPException(status_code=400, detail="目标日期必须是未来日期")
+    return dt
+
+
+def _calc_trading_days(target_date: str, prepared_data: dict) -> int:
+    """从 prepared_data 计算到目标日期的交易天数"""
+    target_dt = _validate_target_date(target_date)
+    last_date = prepared_data["close_prices"].index[-1]
+    if hasattr(last_date, "date"):
+        last_date = last_date.date()
+    else:
+        last_date = pd.to_datetime(last_date).date()
+    return (target_dt.date() - last_date).days
+
+
 # --- Database ---
 stock_db = StockDatabase()
 
@@ -186,6 +213,7 @@ async def predict_single_stock(
     """单个股票预测 API"""
     try:
         ticker = ticker.upper()
+        _validate_target_date(target_date)
 
         # Check cache
         cache_key = f"single:{ticker}:{target_date}"
@@ -218,13 +246,7 @@ async def predict_single_stock(
         )
 
         # Calculate trading days
-        target_dt = datetime.strptime(target_date, "%Y-%m-%d")
-        last_date = prepared_data["close_prices"].index[-1]
-        if hasattr(last_date, "date"):
-            last_date = last_date.date()
-        else:
-            last_date = pd.to_datetime(last_date).date()
-        trading_days = (target_dt.date() - last_date).days
+        trading_days = _calc_trading_days(target_date, prepared_data)
 
         # GBM prediction
         gbm = GBMPredictor(ticker)
@@ -329,7 +351,10 @@ async def predict_batch_stocks(
 ):
     """批量股票预测 API"""
     try:
+        _validate_target_date(target_date)
         ticker_list = [t.strip().upper() for t in tickers.split(",") if t.strip()]
+        if len(ticker_list) > MAX_BATCH_TICKERS:
+            raise HTTPException(status_code=400, detail=f"批量预测最多 {MAX_BATCH_TICKERS} 只股票")
 
         # Check cache
         cache_key = f"batch:{'_'.join(sorted(ticker_list))}:{target_date}"
@@ -361,13 +386,7 @@ async def predict_batch_stocks(
                     or prepared_data["statistics"]["current_price"]
                 )
 
-                target_dt = datetime.strptime(target_date, "%Y-%m-%d")
-                last_date = prepared_data["close_prices"].index[-1]
-                if hasattr(last_date, "date"):
-                    last_date = last_date.date()
-                else:
-                    last_date = pd.to_datetime(last_date).date()
-                trading_days = (target_dt.date() - last_date).days
+                trading_days = _calc_trading_days(target_date, prepared_data)
 
                 # GBM
                 gbm = GBMPredictor(ticker)
@@ -455,13 +474,10 @@ def _quick_predict_one(ticker: str, target_date: str, include_prophet: bool = Fa
         or prepared_data["statistics"]["current_price"]
     )
 
-    target_dt = datetime.strptime(target_date, "%Y-%m-%d")
-    last_date = prepared_data["close_prices"].index[-1]
-    if hasattr(last_date, "date"):
-        last_date = last_date.date()
-    else:
-        last_date = pd.to_datetime(last_date).date()
-    trading_days = (target_dt.date() - last_date).days
+    try:
+        trading_days = _calc_trading_days(target_date, prepared_data)
+    except HTTPException:
+        return None
 
     if trading_days <= 0:
         return None

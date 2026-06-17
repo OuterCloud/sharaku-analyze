@@ -21,25 +21,25 @@ class DataUtils:
     Utility class for stock data operations including download, cache, and preprocessing.
     """
 
+    # 类级别的请求频率控制（所有实例共享）
+    _last_request_time: float = 0
+    _request_interval: float = 1.0
+
     def __init__(self, cache_dir: str = "cache"):
         self.cache_dir = cache_dir
         os.makedirs(self.cache_dir, exist_ok=True)
 
-        # 请求频率控制
-        self.last_request_time = 0
-        self.request_interval = 5.0
-
     def _rate_limit_request(self):
-        """控制请求频率，避免触发API限制"""
+        """控制请求频率，避免触发API限制（类级别共享）"""
         current_time = time.time()
-        time_since_last_request = current_time - self.last_request_time
+        time_since_last = current_time - DataUtils._last_request_time
 
-        if time_since_last_request < self.request_interval:
-            sleep_time = self.request_interval - time_since_last_request
-            logger.info(f"请求频率控制，等待 {sleep_time:.1f} 秒...")
+        if time_since_last < DataUtils._request_interval:
+            sleep_time = DataUtils._request_interval - time_since_last
+            logger.debug(f"请求频率控制，等待 {sleep_time:.1f} 秒...")
             time.sleep(sleep_time)
 
-        self.last_request_time = time.time()
+        DataUtils._last_request_time = time.time()
 
     def get_cache_path(self, ticker: str, start_date: str, end_date: str) -> str:
         filename = f"{ticker}_{start_date}_{end_date}.pkl"
