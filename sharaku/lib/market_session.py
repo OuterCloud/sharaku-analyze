@@ -148,20 +148,12 @@ def _quote_to_mover(q: Dict, session: str) -> Dict:
             ref_label_zh = "收盘价 vs 前收盘"
             ref_label_en = "Close vs Prev Close"
     elif session in ("overnight", "closed"):
-        # 夜盘/休市：Yahoo 无夜盘数据，展示盘后最终价 vs 收盘价
-        post_price = q.get("postMarketPrice")
-        if post_price:
-            price = post_price
-            change = q.get("postMarketChange") or (price - regular_price if regular_price else 0)
-            change_pct = q.get("postMarketChangePercent") or (change / regular_price * 100 if regular_price else 0)
-            ref_label_zh = "盘后收盘价 vs 日内收盘价"
-            ref_label_en = "AH Close vs Regular Close"
-        else:
-            price = regular_price
-            change = q.get("regularMarketChange", 0)
-            change_pct = q.get("regularMarketChangePercent", 0)
-            ref_label_zh = "收盘价 vs 前收盘"
-            ref_label_en = "Close vs Prev Close"
+        # 夜盘/休市：展示日间涨跌（screener 排名的依据）
+        price = regular_price
+        change = q.get("regularMarketChange", 0)
+        change_pct = q.get("regularMarketChangePercent", 0)
+        ref_label_zh = "收盘价 vs 前收盘"
+        ref_label_en = "Close vs Prev Close"
     else:
         # regular session
         price = regular_price
