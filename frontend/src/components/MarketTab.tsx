@@ -39,7 +39,7 @@ const SESSION_COLORS: Record<string, string> = {
   closed: "#6b7280",
 };
 
-const BATCH_SIZE = 25;
+const BATCH_SIZE = 8;
 
 function formatVolume(vol: number): string {
   if (!vol) return "-";

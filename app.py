@@ -4,6 +4,7 @@ Sharaku Analyze - 股票智能预测分析 Web 服务
 """
 
 import warnings
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -431,10 +432,13 @@ try:
 except ImportError:
     pass
 
+_quick_executor = ThreadPoolExecutor(max_workers=8)
 
-def _quick_predict_one(ticker: str, target_date: str) -> Optional[dict]:
-    """预测单只股票的 GBM/MC/Prophet，带 per-ticker 缓存"""
-    cache_key = f"qp:{ticker}:{target_date}"
+
+def _quick_predict_one(ticker: str, target_date: str, include_prophet: bool = False) -> Optional[dict]:
+    """预测单只股票的 GBM/MC（可选 Prophet），带 per-ticker 缓存"""
+    suffix = ":p" if include_prophet else ""
+    cache_key = f"qp:{ticker}:{target_date}{suffix}"
     cached = _cache_get(cache_key)
     if cached:
         return cached
@@ -464,24 +468,24 @@ def _quick_predict_one(ticker: str, target_date: str) -> Optional[dict]:
 
     cur = float(current_price)
 
-    # GBM with 50k simulations
+    # GBM with 10k simulations (sufficient for quick overview)
     gbm = GBMPredictor(ticker)
     gbm.fit(prepared_data["raw_data"])
-    gbm_predictions = gbm.predict(target_date, n_simulations=50000)
+    gbm_predictions = gbm.predict(target_date, n_simulations=10000)
     gbm_risk = gbm.analyze_risk(gbm_predictions)
     gbm_price = float(gbm_risk["mean_price"])
 
-    # Monte Carlo with 50k paths
+    # Monte Carlo with 10k paths
     mc = MonteCarloPredictor(ticker)
     mc.fit(prepared_data["raw_data"])
-    mc_predictions = mc.predict(days=trading_days, n_paths=50000)
+    mc_predictions = mc.predict(days=trading_days, n_paths=10000)
     mc_risk = mc.analyze_risk(mc_predictions)
     mc_price = float(mc_risk["mean_price"])
 
-    # Prophet (skip entirely if not installed)
+    # Prophet (only when explicitly requested)
     prophet_price = None
     prophet_ret = None
-    if _PROPHET_AVAILABLE:
+    if include_prophet and _PROPHET_AVAILABLE:
         try:
             p = ProphetPredictor(ticker)
             p.fit(prepared_data["raw_data"])
@@ -510,8 +514,9 @@ def _quick_predict_one(ticker: str, target_date: str) -> Optional[dict]:
 async def predict_quick_batch(
     tickers: str = "",
     target_date: str = "",
+    prophet: str = "0",
 ):
-    """轻量批量预测 - 跑 GBM/MC/Prophet 三模型，用于行情表异步加载（per-ticker 缓存）"""
+    """轻量批量预测 - 并行跑 GBM/MC（可选 Prophet），用于行情表异步加载"""
     try:
         if not tickers.strip() or not target_date.strip():
             return JSONResponse(content={"success": False, "error": "Missing tickers or target_date"}, status_code=400)
@@ -520,15 +525,23 @@ async def predict_quick_batch(
         if not ticker_list:
             return JSONResponse(content={"success": True, "results": []})
 
+        include_prophet = prophet == "1"
+
+        # Submit all tickers to thread pool for parallel execution
+        futures = {
+            _quick_executor.submit(_quick_predict_one, ticker, target_date, include_prophet): ticker
+            for ticker in ticker_list
+        }
+
         results = []
-        for ticker in ticker_list:
+        for future in as_completed(futures):
+            ticker = futures[future]
             try:
-                item = _quick_predict_one(ticker, target_date)
+                item = future.result(timeout=30)
                 if item:
                     results.append(item)
             except Exception as e:
                 logger.debug(f"Quick predict {ticker} skipped: {e}")
-                continue
 
         return JSONResponse(content={"success": True, "results": results})
 

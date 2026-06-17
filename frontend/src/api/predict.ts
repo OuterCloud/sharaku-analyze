@@ -230,7 +230,8 @@ export interface QuickBatchResult {
   error?: string
 }
 
-export async function predictQuickBatch(tickers: string[], targetDate: string): Promise<QuickBatchResult> {
-  const res = await fetch(`/api/predict/quick-batch?tickers=${encodeURIComponent(tickers.join(','))}&target_date=${encodeURIComponent(targetDate)}`)
+export async function predictQuickBatch(tickers: string[], targetDate: string, includeProphet: boolean = false): Promise<QuickBatchResult> {
+  const prophetParam = includeProphet ? '&prophet=1' : ''
+  const res = await fetch(`/api/predict/quick-batch?tickers=${encodeURIComponent(tickers.join(','))}&target_date=${encodeURIComponent(targetDate)}${prophetParam}`)
   return res.json()
 }
