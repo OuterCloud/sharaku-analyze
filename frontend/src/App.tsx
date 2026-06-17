@@ -16,7 +16,13 @@ const defaultDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>("market");
+  const [selectedTicker, setSelectedTicker] = useState("");
   const { t } = useI18n();
+
+  function handleTickerClick(ticker: string) {
+    setSelectedTicker(ticker);
+    setActiveTab("single");
+  }
 
   return (
     <div className="container">
@@ -58,10 +64,10 @@ export default function App() {
 
         <div className="tab-contents">
           <div style={{ display: activeTab === "market" ? "block" : "none" }}>
-            <MarketTab />
+            <MarketTab onTickerClick={handleTickerClick} />
           </div>
           <div style={{ display: activeTab === "single" ? "block" : "none" }}>
-            <SingleTab defaultDate={defaultDate} />
+            <SingleTab defaultDate={defaultDate} initialTicker={selectedTicker} />
           </div>
           <div style={{ display: activeTab === "batch" ? "block" : "none" }}>
             <BatchTab defaultDate={defaultDate} />

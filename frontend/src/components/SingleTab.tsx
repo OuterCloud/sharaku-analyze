@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { predictSingle, SinglePredictResult } from "../api/predict";
 import { useI18n } from "../i18n/context";
 import { copyToClipboard } from "../utils/clipboard";
@@ -6,6 +6,7 @@ import StockSearch from "./StockSearch";
 
 interface Props {
   defaultDate: string;
+  initialTicker?: string;
 }
 
 function PredictResult({ result }: { result: SinglePredictResult }) {
@@ -153,13 +154,21 @@ ${t("summary.risk.volatility")}: ${(r.volatility * 100).toFixed(2)}%`;
   );
 }
 
-export default function SingleTab({ defaultDate }: Props) {
+export default function SingleTab({ defaultDate, initialTicker }: Props) {
   const [ticker, setTicker] = useState("");
   const [targetDate, setTargetDate] = useState(defaultDate);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState<SinglePredictResult | null>(null);
   const { t } = useI18n();
+
+  useEffect(() => {
+    if (initialTicker && initialTicker !== ticker) {
+      setTicker(initialTicker);
+      setResult(null);
+      setError("");
+    }
+  }, [initialTicker]);
 
   function handleSelect(tk: string) {
     setTicker(tk);
@@ -193,7 +202,7 @@ export default function SingleTab({ defaultDate }: Props) {
     <div className="tab-content">
       <div className="form-group">
         <label>{t("common.selectStock")}</label>
-        <StockSearch onSelect={handleSelect} />
+        <StockSearch onSelect={handleSelect} value={ticker} />
       </div>
 
       <div className="form-group">

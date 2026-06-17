@@ -4,9 +4,10 @@ import { useI18n } from "../i18n/context";
 
 interface Props {
   onSelect: (ticker: string) => void;
+  value?: string;
 }
 
-export default function StockSearch({ onSelect }: Props) {
+export default function StockSearch({ onSelect, value }: Props) {
   const [query, setQuery] = useState("");
   const [items, setItems] = useState<Stock[]>([]);
   const [show, setShow] = useState(false);
@@ -23,6 +24,12 @@ export default function StockSearch({ onSelect }: Props) {
     document.addEventListener("click", onClickOut);
     return () => document.removeEventListener("click", onClickOut);
   }, []);
+
+  useEffect(() => {
+    if (value && value !== query) {
+      setQuery(value);
+    }
+  }, [value]);
 
   async function doSearch(val: string) {
     const stocks = val.trim() ? await searchStocks(val) : await getStocks();

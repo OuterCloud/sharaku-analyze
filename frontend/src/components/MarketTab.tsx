@@ -55,7 +55,11 @@ function getTargetDate(daysAhead: number): string {
   return d.toISOString().split("T")[0];
 }
 
-export default function MarketTab() {
+interface MarketTabProps {
+  onTickerClick?: (ticker: string) => void;
+}
+
+export default function MarketTab({ onTickerClick }: MarketTabProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [session, setSession] = useState<MarketSession | null>(null);
@@ -385,7 +389,10 @@ export default function MarketTab() {
                 {sortedMovers.map((m, idx) => (
                   <tr key={m.ticker}>
                     <td className="market-rank">{idx + 1}</td>
-                    <td>
+                    <td
+                      className="market-ticker-cell"
+                      onClick={() => onTickerClick?.(m.ticker)}
+                    >
                       <strong>{m.ticker}</strong>
                       <br />
                       <small>{m.name}</small>

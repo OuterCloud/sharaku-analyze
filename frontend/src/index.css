@@ -1213,3 +1213,12 @@ th.sortable:hover {
     align-items: flex-start;
   }
 }
+
+.market-ticker-cell {
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.market-ticker-cell:hover {
+  color: var(--accent);
+}
