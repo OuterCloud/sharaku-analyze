@@ -2,12 +2,16 @@
 美股交易时段判断 & 涨跌幅排行（动态获取）
 """
 
+import time
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from typing import Dict, List
 
 import pytz
 import requests
 from loguru import logger
+
+_movers_executor = ThreadPoolExecutor(max_workers=3)
 
 # 美股交易时段（美东时间）
 US_EASTERN = pytz.timezone("US/Eastern")
@@ -218,30 +222,59 @@ def _get_quotes_for_category(scr_id: str, count: int, session: str) -> List[Dict
         return []
 
 
-def fetch_us_market_movers(category: str = "all", count: int = 100) -> Dict:
+# Simple in-memory cache for movers (avoid repeated Yahoo scrapes)
+_movers_cache: Dict[str, dict] = {}
+_MOVERS_CACHE_TTL = 60  # seconds
+
+
+def fetch_us_market_movers(category: str = "all", count: int = 30) -> Dict:
     """
     动态获取美股涨跌幅排行，无需预设列表。
     优先使用 yfinance 认证接口获取实时价格，screener 作为 fallback。
+    三个分类并行获取以减少等待时间。
     category: "gainers" | "losers" | "actives" | "all"
     返回: {"gainers": [...], "losers": [...], "actives": [...]}
     """
+    cache_key = f"{category}:{count}"
+    cached = _movers_cache.get(cache_key)
+    if cached and time.time() - cached["ts"] < _MOVERS_CACHE_TTL:
+        return cached["data"]
+
     session_info = get_us_market_session()
     session = session_info["session"]
 
-    result = {}
-
+    categories_to_fetch = []
     if category in ("gainers", "all"):
-        result["gainers"] = _get_quotes_for_category("day_gainers", count, session)
-        result["gainers"].sort(key=lambda x: x["change_pct"], reverse=True)
-
+        categories_to_fetch.append(("gainers", "day_gainers"))
     if category in ("losers", "all"):
-        result["losers"] = _get_quotes_for_category("day_losers", count, session)
-        result["losers"].sort(key=lambda x: x["change_pct"])
-
+        categories_to_fetch.append(("losers", "day_losers"))
     if category in ("actives", "all"):
-        result["actives"] = _get_quotes_for_category("most_actives", count, session)
-        result["actives"].sort(key=lambda x: x["volume"] or 0, reverse=True)
+        categories_to_fetch.append(("actives", "most_actives"))
 
+    # Fetch all categories in parallel
+    futures = {
+        _movers_executor.submit(_get_quotes_for_category, scr_id, count, session): name
+        for name, scr_id in categories_to_fetch
+    }
+
+    result = {}
+    for future in futures:
+        name = futures[future]
+        try:
+            items = future.result(timeout=15)
+        except Exception as e:
+            logger.warning(f"Movers {name} failed: {e}")
+            items = []
+
+        if name == "gainers":
+            items.sort(key=lambda x: x["change_pct"], reverse=True)
+        elif name == "losers":
+            items.sort(key=lambda x: x["change_pct"])
+        elif name == "actives":
+            items.sort(key=lambda x: x["volume"] or 0, reverse=True)
+        result[name] = items
+
+    _movers_cache[cache_key] = {"data": result, "ts": time.time()}
     return result
 
 

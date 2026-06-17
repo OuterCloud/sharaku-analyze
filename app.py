@@ -641,6 +641,7 @@ async def market_movers(category: str = "all", tickers: str = ""):
     tickers: 可选，逗号分隔的自选股票代码列表
     """
     try:
+        logger.info(f"Market movers request: category={category}")
         session_info = get_us_market_session()
 
         if tickers.strip():
@@ -654,9 +655,10 @@ async def market_movers(category: str = "all", tickers: str = ""):
                 "mode": "custom",
             })
 
-        # 动态获取 Yahoo Finance 实时榜单
-        data = fetch_us_market_movers(category=category, count=100)
+        # 动态获取 Yahoo Finance 实时榜单（并行 + 缓存）
+        data = fetch_us_market_movers(category=category, count=30)
 
+        logger.info(f"Market movers done: {', '.join(f'{k}={len(v)}' for k, v in data.items())}")
         return JSONResponse(content={
             "success": True,
             "session": session_info,
