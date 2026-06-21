@@ -119,6 +119,16 @@ const en: Record<TranslationKey, string> = {
   "market.table.prophet1M": "P 1M",
   "market.predicting": "Predicting...",
 
+  // Date quick picks
+  "date.1w": "1W",
+  "date.1m": "1M",
+  "date.3m": "3M",
+
+  // Watchlist
+  "watchlist.title": "Watchlist",
+  "watchlist.add": "Add to watchlist",
+  "watchlist.empty": "Click ☆ in search results to add stocks",
+
   // StockSearch
   "search.placeholder": "Search by ticker or name...",
   "search.noMatch": "No results found. Try entering a ticker directly.",

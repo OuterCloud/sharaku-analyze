@@ -3,6 +3,7 @@ import { predictSingle, SinglePredictResult } from "../api/predict";
 import { useI18n } from "../i18n/context";
 import { copyToClipboard } from "../utils/clipboard";
 import StockSearch from "./StockSearch";
+import Watchlist from "./Watchlist";
 
 interface Props {
   defaultDate: string;
@@ -203,6 +204,7 @@ export default function SingleTab({ defaultDate, initialTicker }: Props) {
       <div className="form-group">
         <label>{t("common.selectStock")}</label>
         <StockSearch onSelect={handleSelect} value={ticker} />
+        <Watchlist onSelect={handleSelect} />
       </div>
 
       <div className="form-group">
@@ -212,15 +214,36 @@ export default function SingleTab({ defaultDate, initialTicker }: Props) {
           value={targetDate}
           onChange={(e) => setTargetDate(e.target.value)}
         />
+        <div className="date-quick-picks">
+          {[
+            { label: t("date.1w"), days: 7 },
+            { label: t("date.1m"), days: 30 },
+            { label: t("date.3m"), days: 90 },
+          ].map(({ label, days }) => (
+            <button
+              key={days}
+              type="button"
+              className="date-quick-btn"
+              onClick={() => {
+                const d = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+                setTargetDate(d.toISOString().slice(0, 10));
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <button
-        className={`btn${loading ? " loading" : ""}`}
-        disabled={loading}
-        onClick={handlePredict}
-      >
-        {loading ? t("common.loading") : t("single.startPredict")}
-      </button>
+      <div className="sticky-action-bar">
+        <button
+          className={`btn${loading ? " loading" : ""}`}
+          disabled={loading}
+          onClick={handlePredict}
+        >
+          {loading ? t("common.loading") : t("single.startPredict")}
+        </button>
+      </div>
 
       {loading && (
         <div className="loading">

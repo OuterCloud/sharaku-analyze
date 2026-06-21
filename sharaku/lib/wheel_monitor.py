@@ -9,6 +9,13 @@ import yfinance as yf
 from sharaku.i18n import ERRORS, WHEEL_CALL, WHEEL_PUT
 
 
+def _safe_round(val: float, fallback: float = 0) -> int:
+    """round() that handles NaN/inf gracefully."""
+    if np.isnan(val) or np.isinf(val):
+        return int(fallback)
+    return round(val)
+
+
 def analyze_wheel_strategy(ticker: str, cost_basis: float, lang: str = "zh") -> dict:
     """
     分析Wheel期权策略，返回结构化结果。
@@ -56,6 +63,11 @@ def analyze_wheel_strategy(ticker: str, cost_basis: float, lang: str = "zh") -> 
     if current_price is None:
         current_price = hist["Close"].iloc[-1]
 
+    # 去掉含 NaN 的行，避免下游计算出 NaN
+    hist = hist.dropna(subset=["Open", "High", "Low", "Close"])
+    if len(hist) < 2:
+        return {"success": False, "error": t_err["no_ticker_data"].format(ticker=ticker)}
+
     today_open = float(hist["Open"].iloc[-1])
     today_high = float(hist["High"].iloc[-1])
     today_low = float(hist["Low"].iloc[-1])
@@ -66,8 +78,15 @@ def analyze_wheel_strategy(ticker: str, cost_basis: float, lang: str = "zh") -> 
     ema_20 = float(hist["20_EMA"].iloc[-1])
 
     # 20日历史波动率
-    log_returns = np.log(hist["Close"] / hist["Close"].shift(1))
-    volatility = float(log_returns.rolling(window=20).std().iloc[-1] * np.sqrt(252))
+    log_returns = np.log(hist["Close"] / hist["Close"].shift(1)).dropna()
+    if len(log_returns) >= 20:
+        vol_raw = log_returns.rolling(window=20).std().iloc[-1]
+    elif len(log_returns) >= 2:
+        vol_raw = log_returns.std()
+    else:
+        # 数据极少（刚上市1-2天），使用保守估计30%年化波动率
+        vol_raw = 0.30 / np.sqrt(252)
+    volatility = float(vol_raw * np.sqrt(252)) if not np.isnan(vol_raw) else 0.30
 
     # 盘面特征
     intra_drop = (
@@ -130,9 +149,9 @@ def analyze_wheel_strategy(ticker: str, cost_basis: float, lang: str = "zh") -> 
     raw_put_strike = current_price * (1 - 1.04 * std_5day)
     ema_cap = ema_20 * 0.95
     floor = current_price * 0.70
-    recommended_put_strike = round(min(raw_put_strike, ema_cap))
+    recommended_put_strike = _safe_round(min(raw_put_strike, ema_cap), floor)
     if recommended_put_strike < floor:
-        recommended_put_strike = round(floor)
+        recommended_put_strike = _safe_round(floor)
 
     # ========== COVERED CALL 决策 ==========
     call_status = ""
@@ -151,7 +170,7 @@ def analyze_wheel_strategy(ticker: str, cost_basis: float, lang: str = "zh") -> 
         )
     elif current_price < cost_basis:
         # 轻度套牢（<15%），可在成本价之上卖Call收租
-        recommended_call_strike = round(cost_basis * 1.02)
+        recommended_call_strike = _safe_round(cost_basis * 1.02)
 
         if price_vs_ema >= 0 and (gap_and_change > 3.0 or is_v_shape):
             call_status = "moderate"
@@ -167,9 +186,9 @@ def analyze_wheel_strategy(ticker: str, cost_basis: float, lang: str = "zh") -> 
             )
     else:
         # 浮盈状态
-        recommended_call_strike = round(current_price * (1 + 0.67 * std_5day))
+        recommended_call_strike = _safe_round(current_price * (1 + 0.67 * std_5day))
         if recommended_call_strike <= cost_basis:
-            recommended_call_strike = round(cost_basis * 1.05)
+            recommended_call_strike = _safe_round(cost_basis * 1.05)
 
         if price_vs_ema < 0:
             call_status = "hold"

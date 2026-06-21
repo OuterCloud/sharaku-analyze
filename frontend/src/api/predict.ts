@@ -1,3 +1,5 @@
+import { getCached, setCache } from "../utils/apiCache";
+
 export interface Stock {
   ticker: string
   name: string
@@ -77,8 +79,12 @@ export async function getStocks(): Promise<Stock[]> {
 }
 
 export async function predictSingle(ticker: string, targetDate: string): Promise<SinglePredictResult> {
+  const cached = getCached<SinglePredictResult>("single", ticker, targetDate)
+  if (cached) return cached
   const res = await post('/api/predict/single', { ticker, target_date: targetDate })
-  return res.json()
+  const data = await res.json()
+  if (data.success) setCache(data, "single", ticker, targetDate)
+  return data
 }
 
 export async function predictBatch(tickers: string, targetDate: string): Promise<BatchPredictResult> {
@@ -119,8 +125,12 @@ export interface WheelResult {
 }
 
 export async function analyzeWheel(ticker: string, costBasis: number, lang: string = "zh"): Promise<WheelResult> {
+  const cached = getCached<WheelResult>("wheel", ticker, String(costBasis), lang)
+  if (cached) return cached
   const res = await post('/api/wheel/analyze', { ticker, cost_basis: String(costBasis), lang })
-  return res.json()
+  const data = await res.json()
+  if (data.success) setCache(data, "wheel", ticker, String(costBasis), lang)
+  return data
 }
 
 // Technical Analysis
@@ -167,8 +177,12 @@ export interface TechnicalResult {
 }
 
 export async function analyzeTechnical(ticker: string, lang: string = "zh"): Promise<TechnicalResult> {
+  const cached = getCached<TechnicalResult>("technical", ticker, lang)
+  if (cached) return cached
   const res = await post('/api/technical/analyze', { ticker, lang })
-  return res.json()
+  const data = await res.json()
+  if (data.success) setCache(data, "technical", ticker, lang)
+  return data
 }
 
 // Market Session & Movers

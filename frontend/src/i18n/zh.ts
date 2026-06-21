@@ -117,6 +117,16 @@ const zh = {
   "market.table.prophet1M": "P 1M",
   "market.predicting": "预测加载中...",
 
+  // Date quick picks
+  "date.1w": "1周",
+  "date.1m": "1月",
+  "date.3m": "3月",
+
+  // Watchlist
+  "watchlist.title": "自选股",
+  "watchlist.add": "加入自选",
+  "watchlist.empty": "点击搜索结果中的 ☆ 添加自选股",
+
   // StockSearch
   "search.placeholder": "输入股票代码或名称搜索...",
   "search.noMatch": "无匹配结果，可直接输入代码回车验证",

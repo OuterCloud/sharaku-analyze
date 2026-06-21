@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { analyzeTechnical, TechnicalResult } from "../api/predict";
 import { useI18n } from "../i18n/context";
 import StockSearch from "./StockSearch";
+import Watchlist from "./Watchlist";
 
 function signalColor(signal: string): string {
   if (signal.startsWith("看多") || signal.startsWith("偏多") || signal.startsWith("Bullish") || signal.startsWith("Slightly Bullish")) return "#27ae60";
@@ -181,16 +182,19 @@ export default function TechnicalTab() {
     <div className="tab-content">
       <div className="form-group">
         <label>{t("common.selectStock")}</label>
-        <StockSearch onSelect={handleSelect} />
+        <StockSearch onSelect={handleSelect} value={ticker} />
+        <Watchlist onSelect={handleSelect} />
       </div>
 
-      <button
-        className={`btn${loading ? " loading" : ""}`}
-        disabled={loading}
-        onClick={handleAnalyze}
-      >
-        {loading ? t("common.loading") : t("technical.startAnalyze")}
-      </button>
+      <div className="sticky-action-bar">
+        <button
+          className={`btn${loading ? " loading" : ""}`}
+          disabled={loading}
+          onClick={handleAnalyze}
+        >
+          {loading ? t("common.loading") : t("technical.startAnalyze")}
+        </button>
+      </div>
 
       {loading && (
         <div className="loading">

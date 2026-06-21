@@ -335,90 +335,117 @@ export default function MarketTab({ onTickerClick }: MarketTabProps) {
       )}
 
       {movers.length > 0 && (
-        <div className="result-card">
-          <div className="market-table-header">
-            <h4>
-              {t(`market.cat.${category}` as any)}
-              <small style={{ color: "#888", fontWeight: "normal", marginLeft: 8 }}>
-                ({lang === "zh" ? movers[0]?.ref_label_zh : movers[0]?.ref_label_en})
-              </small>
-            </h4>
-            <span className="market-count">
-              {movers.length} {t("market.stocks")}
-              {predictionsLoading && (
-                <small style={{ marginLeft: 8, color: "var(--text-muted)" }}>
-                  {t("market.predicting")}
+        <>
+          {/* Desktop table view */}
+          <div className="result-card market-desktop-view">
+            <div className="market-table-header">
+              <h4>
+                {t(`market.cat.${category}` as any)}
+                <small style={{ color: "#888", fontWeight: "normal", marginLeft: 8 }}>
+                  ({lang === "zh" ? movers[0]?.ref_label_zh : movers[0]?.ref_label_en})
                 </small>
-              )}
-            </span>
+              </h4>
+              <span className="market-count">
+                {movers.length} {t("market.stocks")}
+                {predictionsLoading && (
+                  <small style={{ marginLeft: 8, color: "var(--text-muted)" }}>
+                    {t("market.predicting")}
+                  </small>
+                )}
+              </span>
+            </div>
+
+            <div className="batch-table-wrapper">
+              <table className="batch-table market-table market-table-6col">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>{t("market.table.stock")}</th>
+                    <th className="sortable" onClick={() => handleSort("price")}>
+                      {t("market.table.price")} {sortIndicator("price")}
+                    </th>
+                    <th className="sortable" onClick={() => handleSort("change")}>
+                      {t("market.table.change")} {sortIndicator("change")}
+                    </th>
+                    <th className="sortable" onClick={() => handleSort("change_pct")}>
+                      {t("market.table.changePct")} {sortIndicator("change_pct")}
+                    </th>
+                    <th className="sortable" onClick={() => handleSort("volume")}>
+                      {t("market.table.volume")} {sortIndicator("volume")}
+                    </th>
+                    <th className="sortable" onClick={() => handleSort("gbm_w")}>
+                      {t("market.table.gbm1W")} {sortIndicator("gbm_w")}
+                    </th>
+                    <th className="sortable" onClick={() => handleSort("mc_w")}>
+                      {t("market.table.mc1W")} {sortIndicator("mc_w")}
+                    </th>
+                    <th className="sortable" onClick={() => handleSort("gbm_m")}>
+                      {t("market.table.gbm1M")} {sortIndicator("gbm_m")}
+                    </th>
+                    <th className="sortable" onClick={() => handleSort("mc_m")}>
+                      {t("market.table.mc1M")} {sortIndicator("mc_m")}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedMovers.map((m, idx) => (
+                    <tr key={m.ticker}>
+                      <td className="market-rank">{idx + 1}</td>
+                      <td
+                        className="market-ticker-cell"
+                        onClick={() => onTickerClick?.(m.ticker)}
+                      >
+                        <strong>{m.ticker}</strong>
+                        <br />
+                        <small>{m.name}</small>
+                      </td>
+                      <td>${m.price.toFixed(2)}</td>
+                      <td className={m.change >= 0 ? "positive" : "negative"}>
+                        {m.change >= 0 ? "+" : ""}
+                        {m.change.toFixed(2)}
+                      </td>
+                      <td className={m.change_pct >= 0 ? "positive" : "negative"}>
+                        <strong>
+                          {m.change_pct >= 0 ? "+" : ""}
+                          {m.change_pct.toFixed(2)}%
+                        </strong>
+                      </td>
+                      <td>{formatVolume(m.volume)}</td>
+                      {renderPredictCell(m.ticker, "week", "gbm")}
+                      {renderPredictCell(m.ticker, "week", "mc")}
+                      {renderPredictCell(m.ticker, "month", "gbm")}
+                      {renderPredictCell(m.ticker, "month", "mc")}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
 
-          <div className="batch-table-wrapper">
-            <table className="batch-table market-table market-table-6col">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>{t("market.table.stock")}</th>
-                  <th className="sortable" onClick={() => handleSort("price")}>
-                    {t("market.table.price")} {sortIndicator("price")}
-                  </th>
-                  <th className="sortable" onClick={() => handleSort("change")}>
-                    {t("market.table.change")} {sortIndicator("change")}
-                  </th>
-                  <th className="sortable" onClick={() => handleSort("change_pct")}>
-                    {t("market.table.changePct")} {sortIndicator("change_pct")}
-                  </th>
-                  <th className="sortable" onClick={() => handleSort("volume")}>
-                    {t("market.table.volume")} {sortIndicator("volume")}
-                  </th>
-                  <th className="sortable" onClick={() => handleSort("gbm_w")}>
-                    {t("market.table.gbm1W")} {sortIndicator("gbm_w")}
-                  </th>
-                  <th className="sortable" onClick={() => handleSort("mc_w")}>
-                    {t("market.table.mc1W")} {sortIndicator("mc_w")}
-                  </th>
-                  <th className="sortable" onClick={() => handleSort("gbm_m")}>
-                    {t("market.table.gbm1M")} {sortIndicator("gbm_m")}
-                  </th>
-                  <th className="sortable" onClick={() => handleSort("mc_m")}>
-                    {t("market.table.mc1M")} {sortIndicator("mc_m")}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {sortedMovers.map((m, idx) => (
-                  <tr key={m.ticker}>
-                    <td className="market-rank">{idx + 1}</td>
-                    <td
-                      className="market-ticker-cell"
-                      onClick={() => onTickerClick?.(m.ticker)}
-                    >
-                      <strong>{m.ticker}</strong>
-                      <br />
-                      <small>{m.name}</small>
-                    </td>
-                    <td>${m.price.toFixed(2)}</td>
-                    <td className={m.change >= 0 ? "positive" : "negative"}>
-                      {m.change >= 0 ? "+" : ""}
-                      {m.change.toFixed(2)}
-                    </td>
-                    <td className={m.change_pct >= 0 ? "positive" : "negative"}>
-                      <strong>
-                        {m.change_pct >= 0 ? "+" : ""}
-                        {m.change_pct.toFixed(2)}%
-                      </strong>
-                    </td>
-                    <td>{formatVolume(m.volume)}</td>
-                    {renderPredictCell(m.ticker, "week", "gbm")}
-                    {renderPredictCell(m.ticker, "week", "mc")}
-                    {renderPredictCell(m.ticker, "month", "gbm")}
-                    {renderPredictCell(m.ticker, "month", "mc")}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          {/* Mobile card view */}
+          <div className="market-mobile-cards">
+            {sortedMovers.map((m, idx) => (
+              <div
+                key={m.ticker}
+                className="market-card"
+                onClick={() => onTickerClick?.(m.ticker)}
+              >
+                <div className="market-card-header">
+                  <span className="market-card-rank">{idx + 1}</span>
+                  <span className="market-card-ticker">{m.ticker}</span>
+                  <span className={`market-card-pct ${m.change_pct >= 0 ? "positive" : "negative"}`}>
+                    {m.change_pct >= 0 ? "+" : ""}{m.change_pct.toFixed(2)}%
+                  </span>
+                </div>
+                <div className="market-card-name">{m.name}</div>
+                <div className="market-card-details">
+                  <span>${m.price.toFixed(2)}</span>
+                  <span>{formatVolume(m.volume)}</span>
+                </div>
+              </div>
+            ))}
           </div>
-        </div>
+        </>
       )}
 
       {!loading && movers.length === 0 && !error && (

@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { getStocks, searchStocks, Stock } from "../api/predict";
 import { useI18n } from "../i18n/context";
+import {
+  addToWatchlist,
+  isInWatchlist,
+} from "../utils/watchlist";
 
 interface Props {
   onSelect: (ticker: string) => void;
@@ -26,9 +30,16 @@ export default function StockSearch({ onSelect, value }: Props) {
   }, []);
 
   useEffect(() => {
-    if (value && value !== query) {
-      setQuery(value);
+    if (value === undefined) return;
+    if (!value) {
+      setQuery("");
+      return;
     }
+    setQuery((prev) => {
+      // Already showing this stock (e.g. "AAPL - Apple Inc." for value "AAPL")
+      if (prev.startsWith(value)) return prev;
+      return value;
+    });
   }, [value]);
 
   async function doSearch(val: string) {
@@ -115,6 +126,19 @@ export default function StockSearch({ onSelect, value }: Props) {
               </span>
               <span className="stock-code">{s.ticker}</span>
               <span className="stock-name">{s.name}</span>
+              <span
+                className={`stock-star${isInWatchlist(s.ticker) ? " active" : ""}`}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  addToWatchlist({ ticker: s.ticker, name: s.name });
+                  window.dispatchEvent(new Event("watchlist-updated"));
+                  setItems([...items]);
+                }}
+                title={t("watchlist.add")}
+              >
+                {isInWatchlist(s.ticker) ? "\u2605" : "\u2606"}
+              </span>
             </div>
           ))}
           {items.length === 0 && (

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { analyzeWheel, WheelResult } from "../api/predict";
 import { useI18n } from "../i18n/context";
 import StockSearch from "./StockSearch";
+import Watchlist from "./Watchlist";
 
 function statusColor(status: string): string {
   switch (status) {
@@ -220,7 +221,8 @@ export default function WheelTab() {
     <div className="tab-content">
       <div className="form-group">
         <label>{t("common.selectStock")}</label>
-        <StockSearch onSelect={handleSelect} />
+        <StockSearch onSelect={handleSelect} value={ticker} />
+        <Watchlist onSelect={handleSelect} />
       </div>
 
       <div className="form-group">
@@ -236,13 +238,15 @@ export default function WheelTab() {
         />
       </div>
 
-      <button
-        className={`btn${loading ? " loading" : ""}`}
-        disabled={loading}
-        onClick={handleAnalyze}
-      >
-        {loading ? t("common.loading") : t("wheel.startAnalyze")}
-      </button>
+      <div className="sticky-action-bar">
+        <button
+          className={`btn${loading ? " loading" : ""}`}
+          disabled={loading}
+          onClick={handleAnalyze}
+        >
+          {loading ? t("common.loading") : t("wheel.startAnalyze")}
+        </button>
+      </div>
 
       {loading && (
         <div className="loading">

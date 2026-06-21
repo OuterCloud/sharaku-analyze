@@ -141,8 +141,8 @@ body {
 }
 
 .header-btn {
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   border: 1px solid var(--border-color);
   background: var(--bg-card);
@@ -327,18 +327,20 @@ body {
 
 .stock-search-clear {
   position: absolute;
-  right: 10px;
+  right: 4px;
   top: 50%;
   transform: translateY(-50%);
   border: none;
-  background: #d0d0d0;
+  background: none;
   color: #555;
-  width: 22px;
-  height: 22px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
-  font-size: 1.1em;
-  line-height: 22px;
-  text-align: center;
+  font-size: 1.3em;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
   padding: 0;
   z-index: 10;
@@ -473,6 +475,139 @@ body {
   white-space: nowrap;
 }
 
+/* ===== Sticky Action Bar (mobile) ===== */
+@media (max-width: 600px) {
+  .sticky-action-bar {
+    position: sticky;
+    bottom: 0;
+    z-index: 50;
+    background: var(--bg-main);
+    padding: 12px 0;
+    margin: 0 -12px;
+    padding-left: 12px;
+    padding-right: 12px;
+    border-top: 1px solid var(--border-color);
+  }
+  .sticky-action-bar .btn {
+    width: 100%;
+  }
+}
+
+/* ===== Date Quick Picks ===== */
+.date-quick-picks {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.date-quick-btn {
+  padding: 6px 14px;
+  border: 1px solid var(--border-tag, #ddd);
+  border-radius: 16px;
+  background: var(--bg-tag, #f0f0f0);
+  font-size: 0.85em;
+  font-weight: 500;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  min-height: 36px;
+}
+
+@media (hover: hover) {
+  .date-quick-btn:hover {
+    border-color: var(--accent);
+    background: var(--bg-hover);
+  }
+}
+
+.date-quick-btn:active {
+  transform: scale(0.96);
+}
+
+/* ===== Watchlist ===== */
+.watchlist {
+  margin-top: 8px;
+}
+
+.watchlist-label {
+  font-size: 0.8em;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.watchlist-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.watchlist-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  background: var(--bg-tag, #f0f0f0);
+  border: 1px solid var(--border-tag, #ddd);
+  border-radius: 16px;
+  font-size: 0.85em;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  min-height: 36px;
+}
+
+@media (hover: hover) {
+  .watchlist-chip:hover {
+    background: var(--bg-hover);
+    border-color: var(--accent);
+  }
+}
+
+.watchlist-chip:active {
+  transform: scale(0.96);
+}
+
+.watchlist-chip-ticker {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.watchlist-chip-remove {
+  font-size: 1.1em;
+  line-height: 1;
+  color: var(--text-muted);
+  margin-left: 2px;
+  padding: 2px;
+  border-radius: 50%;
+}
+
+@media (hover: hover) {
+  .watchlist-chip-remove:hover {
+    color: #e74c3c;
+    background: rgba(231, 76, 60, 0.1);
+  }
+}
+
+/* Star button in search dropdown */
+.stock-star {
+  margin-left: auto;
+  font-size: 1.2em;
+  color: var(--text-muted);
+  padding: 4px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.stock-star.active {
+  color: #f5a623;
+}
+
+@media (hover: hover) {
+  .stock-star:hover {
+    color: #f5a623;
+    transform: scale(1.2);
+  }
+}
+
 /* ===== Multi-Select ===== */
 .multi-select-wrapper {
   position: relative;
@@ -508,10 +643,10 @@ body {
   cursor: pointer;
   color: var(--text-muted);
   font-size: 1.1em;
-  padding: 0 2px;
+  padding: 0 4px;
   line-height: 1;
-  min-width: 24px;
-  min-height: 24px;
+  min-width: 36px;
+  min-height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -524,14 +659,14 @@ body {
 }
 
 .multi-select-clear {
-  padding: 4px 10px;
+  padding: 6px 12px;
   border: 1px solid var(--border-input);
   background: var(--bg-clear-btn);
   border-radius: 16px;
-  font-size: 0.8em;
+  font-size: 0.85em;
   cursor: pointer;
   color: var(--text-secondary);
-  min-height: 32px;
+  min-height: 44px;
 }
 
 @media (hover: hover) {
@@ -960,8 +1095,8 @@ div.loading {
 }
 
 .btn-refresh {
-  width: 32px;
-  height: 32px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   border: 1px solid var(--border-color);
   background: var(--bg-input);
@@ -1002,8 +1137,9 @@ div.loading {
 }
 
 .market-cat-btn {
-  padding: 8px 20px;
+  padding: 10px 20px;
   border-radius: 20px;
+  min-height: 44px;
   border: 1px solid var(--border-color);
   background: var(--bg-card);
   color: var(--text-secondary);
@@ -1090,8 +1226,9 @@ div.loading {
 }
 
 .btn-sort {
-  padding: 4px 12px;
+  padding: 8px 12px;
   border-radius: 4px;
+  min-height: 44px;
   border: 1px solid var(--border-color);
   background: var(--bg-input);
   color: var(--text-secondary);
@@ -1221,4 +1358,77 @@ th.sortable:hover {
 
 .market-ticker-cell:hover {
   color: var(--accent);
+}
+
+/* ===== Market Mobile Cards ===== */
+.market-mobile-cards {
+  display: none;
+}
+
+@media (max-width: 600px) {
+  .market-desktop-view {
+    display: none;
+  }
+  .market-mobile-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+
+.market-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.market-card:active {
+  border-color: var(--accent);
+  transform: scale(0.98);
+}
+
+.market-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.market-card-rank {
+  font-size: 0.8em;
+  color: var(--text-muted);
+  min-width: 20px;
+}
+
+.market-card-ticker {
+  font-weight: 700;
+  font-size: 1em;
+  color: var(--text-primary);
+}
+
+.market-card-pct {
+  margin-left: auto;
+  font-weight: 700;
+  font-size: 1.05em;
+}
+
+.market-card-name {
+  font-size: 0.8em;
+  color: var(--text-secondary);
+  margin-top: 4px;
+  margin-left: 28px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.market-card-details {
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+  margin-left: 28px;
+  font-size: 0.85em;
+  color: var(--text-secondary);
 }
