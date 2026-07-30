@@ -268,17 +268,19 @@ export default function MarketTab({ onTickerClick }: MarketTabProps) {
       {/* Session Status Bar - only show when data is loaded */}
       {session && (
         <div className="market-session-bar">
-          <div className="market-session-info">
-            <span
-              className="market-session-dot"
-              style={{ backgroundColor: sessionColor }}
-            />
-            <span className="market-session-label" style={{ color: sessionColor }}>
-              {sessionLabel}
-            </span>
-            <span className="market-session-time">
-              ET {session.eastern_time}
-            </span>
+          <div className="market-session-top">
+            <div className="market-session-info">
+              <span
+                className="market-session-dot"
+                style={{ backgroundColor: sessionColor }}
+              />
+              <span className="market-session-label" style={{ color: sessionColor }}>
+                {sessionLabel}
+              </span>
+              <span className="market-session-time">
+                ET {session.eastern_time}
+              </span>
+            </div>
             {(session.session === "overnight" || session.session === "closed") && (
               <span className="market-delayed-hint">
                 {t("market.closedNotice")}

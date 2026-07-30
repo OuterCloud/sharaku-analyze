@@ -159,56 +159,62 @@ def analyze_wheel_strategy(ticker: str, cost_basis: float, lang: str = "zh") -> 
     call_reason = ""
     recommended_call_strike = None
 
-    underwater_pct = (cost_basis - current_price) / cost_basis * 100 if cost_basis > 0 else 0
-
-    if current_price < cost_basis * 0.85:
-        # 深度套牢（>15%），不建议卖Call
-        call_status = "underwater"
-        call_label = t_call["underwater_label"]
-        call_reason = t_call["underwater_reason"].format(
-            price=current_price, cost=cost_basis, pct=underwater_pct
-        )
-    elif current_price < cost_basis:
-        # 轻度套牢（<15%），可在成本价之上卖Call收租
-        recommended_call_strike = _safe_round(cost_basis * 1.02)
-
-        if price_vs_ema >= 0 and (gap_and_change > 3.0 or is_v_shape):
-            call_status = "moderate"
-            call_label = t_call["moderate_underwater_label"]
-            call_reason = t_call["moderate_underwater_reason"].format(
-                price=current_price, pct=underwater_pct, strike=recommended_call_strike
-            )
-        else:
-            call_status = "caution"
-            call_label = t_call["caution_underwater_label"]
-            call_reason = t_call["caution_underwater_reason"].format(
-                price=current_price, pct=underwater_pct, strike=recommended_call_strike
-            )
+    if cost_basis <= 0:
+        # 未持股，跳过 Covered Call 分析
+        call_status = "no_position"
+        call_label = ""
+        call_reason = ""
     else:
-        # 浮盈状态
-        recommended_call_strike = _safe_round(current_price * (1 + 0.67 * std_5day))
-        if recommended_call_strike <= cost_basis:
-            recommended_call_strike = _safe_round(cost_basis * 1.05)
+        underwater_pct = (cost_basis - current_price) / cost_basis * 100
 
-        if price_vs_ema < 0:
-            call_status = "hold"
-            call_label = t_call["hold_label"]
-            call_reason = t_call["hold_reason_pullback"].format(deviation=price_vs_ema * 100)
-        elif (gap_and_change > 5.0 or is_v_shape) and price_vs_ema > 0.02:
-            call_status = "great"
-            call_label = t_call["great_label"]
-            if is_v_shape:
-                call_reason = t_call["great_reason_v"].format(ticker=ticker)
+        if current_price < cost_basis * 0.85:
+            # 深度套牢（>15%），不建议卖Call
+            call_status = "underwater"
+            call_label = t_call["underwater_label"]
+            call_reason = t_call["underwater_reason"].format(
+                price=current_price, cost=cost_basis, pct=underwater_pct
+            )
+        elif current_price < cost_basis:
+            # 轻度套牢（<15%），可在成本价之上卖Call收租
+            recommended_call_strike = _safe_round(cost_basis * 1.02)
+
+            if price_vs_ema >= 0 and (gap_and_change > 3.0 or is_v_shape):
+                call_status = "moderate"
+                call_label = t_call["moderate_underwater_label"]
+                call_reason = t_call["moderate_underwater_reason"].format(
+                    price=current_price, pct=underwater_pct, strike=recommended_call_strike
+                )
             else:
-                call_reason = t_call["great_reason_surge"].format(ticker=ticker, change=gap_and_change)
-        elif gap_and_change > 3.0 and price_vs_ema > 0:
-            call_status = "moderate"
-            call_label = t_call["moderate_label"]
-            call_reason = t_call["moderate_reason"]
+                call_status = "caution"
+                call_label = t_call["caution_underwater_label"]
+                call_reason = t_call["caution_underwater_reason"].format(
+                    price=current_price, pct=underwater_pct, strike=recommended_call_strike
+                )
         else:
-            call_status = "hold"
-            call_label = t_call["hold_label"]
-            call_reason = t_call["hold_reason_no_spike"]
+            # 浮盈状态
+            recommended_call_strike = _safe_round(current_price * (1 + 0.67 * std_5day))
+            if recommended_call_strike <= cost_basis:
+                recommended_call_strike = _safe_round(cost_basis * 1.05)
+
+            if price_vs_ema < 0:
+                call_status = "hold"
+                call_label = t_call["hold_label"]
+                call_reason = t_call["hold_reason_pullback"].format(deviation=price_vs_ema * 100)
+            elif (gap_and_change > 5.0 or is_v_shape) and price_vs_ema > 0.02:
+                call_status = "great"
+                call_label = t_call["great_label"]
+                if is_v_shape:
+                    call_reason = t_call["great_reason_v"].format(ticker=ticker)
+                else:
+                    call_reason = t_call["great_reason_surge"].format(ticker=ticker, change=gap_and_change)
+            elif gap_and_change > 3.0 and price_vs_ema > 0:
+                call_status = "moderate"
+                call_label = t_call["moderate_label"]
+                call_reason = t_call["moderate_reason"]
+            else:
+                call_status = "hold"
+                call_label = t_call["hold_label"]
+                call_reason = t_call["hold_reason_no_spike"]
 
     return {
         "success": True,

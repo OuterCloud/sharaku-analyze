@@ -71,7 +71,8 @@ const en: Record<TranslationKey, string> = {
 
   // WheelTab
   "wheel.costBasis": "Cost Basis ($)",
-  "wheel.costPlaceholder": "e.g. 150.00",
+  "wheel.costBasisHint": "Leave empty if no position (Put analysis only)",
+  "wheel.costPlaceholder": "Leave empty if no position",
   "wheel.startAnalyze": "Wheel Analysis",
   "wheel.analyzing": "Fetching live data and analyzing...",
   "wheel.error.costBasis": "Please enter a valid cost basis",

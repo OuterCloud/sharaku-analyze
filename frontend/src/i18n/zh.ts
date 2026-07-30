@@ -69,7 +69,8 @@ const zh = {
 
   // WheelTab
   "wheel.costBasis": "正股持仓成本价 ($)",
-  "wheel.costPlaceholder": "例如: 150.00",
+  "wheel.costBasisHint": "未持股可留空，仅分析 Sell Put",
+  "wheel.costPlaceholder": "未持股留空",
   "wheel.startAnalyze": "Wheel策略分析",
   "wheel.analyzing": "正在获取实时数据并分析...",
   "wheel.error.costBasis": "请输入有效的持仓成本价",

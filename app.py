@@ -609,7 +609,7 @@ async def technical_analyze(
 @app.post("/api/wheel/analyze")
 async def wheel_analyze(
     ticker: str = Form(...),
-    cost_basis: float = Form(...),
+    cost_basis: float = Form(0),
     lang: str = Form("zh"),
 ):
     """Wheel期权策略分析 API"""

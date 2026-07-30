@@ -237,6 +237,13 @@ body {
   border-color: var(--accent);
 }
 
+.form-hint {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.8em;
+  color: var(--text-muted);
+}
+
 /* ===== Buttons ===== */
 .btn {
   display: inline-flex;
@@ -1055,6 +1062,12 @@ div.loading {
   margin-bottom: 16px;
 }
 
+.market-session-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .market-session-info {
   display: flex;
   align-items: center;
@@ -1335,13 +1348,54 @@ th.sortable:hover {
 @media (max-width: 600px) {
   .market-session-bar {
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
     align-items: flex-start;
+    padding: 10px 12px;
+  }
+
+  .market-session-top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    width: 100%;
+  }
+
+  .market-session-info {
+    gap: 8px;
+  }
+
+  .market-session-label {
+    font-size: 0.9em;
+  }
+
+  .market-session-time {
+    font-size: 0.8em;
+  }
+
+  .market-delayed-hint {
+    margin-left: 0;
+    font-size: 0.72em;
+    padding: 2px 6px;
+  }
+
+  .market-session-dot {
+    width: 8px;
+    height: 8px;
   }
 
   .market-session-actions {
     width: 100%;
     justify-content: space-between;
+  }
+
+  .market-last-update {
+    font-size: 0.72em;
+  }
+
+  .btn-refresh {
+    width: 34px;
+    height: 34px;
+    font-size: 1.1em;
   }
 
   .market-table-header {

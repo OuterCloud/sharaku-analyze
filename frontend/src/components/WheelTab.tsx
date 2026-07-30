@@ -121,39 +121,41 @@ function WheelResultView({ result }: { result: WheelResult }) {
         </div>
       </div>
 
-      <div className="result-card">
-        <h3 className="result-title">{t("wheel.coveredCall")}</h3>
-        <div style={{ fontSize: "0.9em", color: "var(--text-secondary)", marginBottom: "12px" }}>
-          {t("wheel.coveredCall.cost")}: ${result.covered_call.cost_basis!.toFixed(2)}
-        </div>
-        <div className="wheel-decision" style={{ borderLeft: `4px solid ${statusColor(result.covered_call.status)}`, paddingLeft: "16px", marginBottom: "16px" }}>
-          <div style={{ fontSize: "1.1em", fontWeight: 600, marginBottom: "8px" }}>
-            {statusIcon(result.covered_call.status)} {result.covered_call.label}
+      {result.covered_call.status !== "no_position" && (
+        <div className="result-card">
+          <h3 className="result-title">{t("wheel.coveredCall")}</h3>
+          <div style={{ fontSize: "0.9em", color: "var(--text-secondary)", marginBottom: "12px" }}>
+            {t("wheel.coveredCall.cost")}: ${result.covered_call.cost_basis!.toFixed(2)}
           </div>
-          <div style={{ color: "var(--text-secondary)", lineHeight: 1.6 }}>
-            {result.covered_call.reason}
-          </div>
-        </div>
-        {result.covered_call.recommended_strike && (
-          <div className="stats-grid">
-            <div className="stat-item">
-              <div className="stat-label">{t("wheel.coveredCall.strike")}</div>
-              <div className="stat-value">${result.covered_call.recommended_strike}</div>
+          <div className="wheel-decision" style={{ borderLeft: `4px solid ${statusColor(result.covered_call.status)}`, paddingLeft: "16px", marginBottom: "16px" }}>
+            <div style={{ fontSize: "1.1em", fontWeight: 600, marginBottom: "8px" }}>
+              {statusIcon(result.covered_call.status)} {result.covered_call.label}
             </div>
-            <div className="stat-item">
-              <div className="stat-label">{t("wheel.coveredCall.distance")}</div>
-              <div className="stat-value positive">
-                +{result.covered_call.strike_distance_pct!.toFixed(1)}%
+            <div style={{ color: "var(--text-secondary)", lineHeight: 1.6 }}>
+              {result.covered_call.reason}
+            </div>
+          </div>
+          {result.covered_call.recommended_strike && (
+            <div className="stats-grid">
+              <div className="stat-item">
+                <div className="stat-label">{t("wheel.coveredCall.strike")}</div>
+                <div className="stat-value">${result.covered_call.recommended_strike}</div>
+              </div>
+              <div className="stat-item">
+                <div className="stat-label">{t("wheel.coveredCall.distance")}</div>
+                <div className="stat-value positive">
+                  +{result.covered_call.strike_distance_pct!.toFixed(1)}%
+                </div>
               </div>
             </div>
-          </div>
-        )}
-        {result.covered_call.recommended_strike && (
-          <div style={{ marginTop: "12px", fontSize: "0.85em", color: "var(--text-muted)" }}>
-            {t("wheel.coveredCall.note")}
-          </div>
-        )}
-      </div>
+          )}
+          {result.covered_call.recommended_strike && (
+            <div style={{ marginTop: "12px", fontSize: "0.85em", color: "var(--text-muted)" }}>
+              {t("wheel.coveredCall.note")}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -209,8 +211,8 @@ export default function WheelTab() {
       setError(t("common.error.selectStock"));
       return;
     }
-    const cost = parseFloat(costBasis);
-    if (!cost || cost <= 0) {
+    const cost = costBasis ? parseFloat(costBasis) : 0;
+    if (costBasis && cost < 0) {
       setError(t("wheel.error.costBasis"));
       return;
     }
@@ -236,6 +238,7 @@ export default function WheelTab() {
           onChange={(e) => setCostBasis(e.target.value)}
           className="stock-search-input"
         />
+        <small className="form-hint">{t("wheel.costBasisHint")}</small>
       </div>
 
       <div className="sticky-action-bar">
