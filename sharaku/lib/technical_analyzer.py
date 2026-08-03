@@ -47,6 +47,10 @@ class TechnicalAnalyzer:
             }
 
         df = data.copy()
+        # 处理 yfinance 返回的 MultiIndex 列（即使单只股票也可能出现）
+        if isinstance(df.columns, pd.MultiIndex):
+            df.columns = df.columns.droplevel("Ticker")
+
         close = df["Close"].squeeze()
         high = df["High"].squeeze()
         low = df["Low"].squeeze()

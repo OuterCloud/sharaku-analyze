@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { analyzeTechnical, TechnicalResult } from "../api/predict";
 import { useI18n } from "../i18n/context";
+import { formatPrice } from "../utils/currency";
 import StockSearch from "./StockSearch";
 import Watchlist from "./Watchlist";
 
@@ -29,6 +30,7 @@ function adviceColor(advice: string): string {
 function TechnicalResultView({ result }: { result: TechnicalResult }) {
   const signalEntries = Object.entries(result.signals);
   const { t } = useI18n();
+  const ticker = result.ticker;
 
   return (
     <div style={{ marginTop: "20px" }}>
@@ -58,7 +60,7 @@ function TechnicalResultView({ result }: { result: TechnicalResult }) {
         </div>
         <div className="stat-item" style={{ marginTop: "12px" }}>
           <div className="stat-label">{t("wheel.currentPrice")}</div>
-          <div className="stat-value">${result.current_price.toFixed(2)}</div>
+          <div className="stat-value">{formatPrice(result.current_price, ticker)}</div>
         </div>
       </div>
 
@@ -100,13 +102,13 @@ function TechnicalResultView({ result }: { result: TechnicalResult }) {
             <div className="stat-item">
               <div className="stat-label">{t("technical.priceTarget.stopLoss")}</div>
               <div className="stat-value negative">
-                ${result.stop_loss.toFixed(2)}
+                {formatPrice(result.stop_loss, ticker)}
               </div>
             </div>
             <div className="stat-item">
               <div className="stat-label">{t("technical.priceTarget.target")}</div>
               <div className="stat-value positive">
-                ${result.target.toFixed(2)}
+                {formatPrice(result.target, ticker)}
               </div>
             </div>
           </div>
