@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { predictSingle, SinglePredictResult } from "../api/predict";
 import { useI18n } from "../i18n/context";
 import { copyToClipboard } from "../utils/clipboard";
+import { formatPrice, getCurrencySymbol } from "../utils/currency";
 import StockSearch from "./StockSearch";
 import Watchlist from "./Watchlist";
 
@@ -17,28 +18,29 @@ function PredictResult({ result }: { result: SinglePredictResult }) {
 
   function buildSummaryText(r: SinglePredictResult): string {
     const s = r.stats_summary!;
+    const sym = getCurrencySymbol(r.ticker);
     let text = `${t("summary.stockInfo")}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ${t("summary.ticker")}: ${r.ticker}
 ${t("summary.name")}: ${r.name}
-${t("summary.currentPrice")}: $${r.current_price.toFixed(2)}
+${t("summary.currentPrice")}: ${sym}${r.current_price.toFixed(2)}
 ${t("summary.targetDate")}: ${r.target_date}
 ${t("summary.tradingDays")}: ${r.trading_days} ${t("summary.days")}
 
 ${t("summary.gbm.title")}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-${t("summary.meanPrice")}: $${s.gbm.mean.toFixed(2)}
-${t("summary.medianPrice")}: $${s.gbm.median.toFixed(2)}
-${t("summary.std")}: $${s.gbm.std.toFixed(2)}
-${t("summary.ci")}: $${s.gbm.percentile_5.toFixed(2)} - $${s.gbm.percentile_95.toFixed(2)}
+${t("summary.meanPrice")}: ${sym}${s.gbm.mean.toFixed(2)}
+${t("summary.medianPrice")}: ${sym}${s.gbm.median.toFixed(2)}
+${t("summary.std")}: ${sym}${s.gbm.std.toFixed(2)}
+${t("summary.ci")}: ${sym}${s.gbm.percentile_5.toFixed(2)} - ${sym}${s.gbm.percentile_95.toFixed(2)}
 ${t("summary.expectedReturn")}: ${s.gbm.expected_return.toFixed(2)}%
 
 ${t("summary.mc.title")}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-${t("summary.meanPrice")}: $${s.mc.mean.toFixed(2)}
-${t("summary.medianPrice")}: $${s.mc.median.toFixed(2)}
-${t("summary.std")}: $${s.mc.std.toFixed(2)}
-${t("summary.ci")}: $${s.mc.percentile_5.toFixed(2)} - $${s.mc.percentile_95.toFixed(2)}
+${t("summary.meanPrice")}: ${sym}${s.mc.mean.toFixed(2)}
+${t("summary.medianPrice")}: ${sym}${s.mc.median.toFixed(2)}
+${t("summary.std")}: ${sym}${s.mc.std.toFixed(2)}
+${t("summary.ci")}: ${sym}${s.mc.percentile_5.toFixed(2)} - ${sym}${s.mc.percentile_95.toFixed(2)}
 ${t("summary.expectedReturn")}: ${s.mc.expected_return.toFixed(2)}%`;
 
     if (r.prophet) {
@@ -46,8 +48,8 @@ ${t("summary.expectedReturn")}: ${s.mc.expected_return.toFixed(2)}%`;
 
 ${t("summary.prophet.title")}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-${t("summary.prophet.price")}: $${r.prophet.mean_price.toFixed(2)}
-${t("summary.prophet.ci")}: $${r.prophet.lower_bound.toFixed(2)} - $${r.prophet.upper_bound.toFixed(2)}
+${t("summary.prophet.price")}: ${sym}${r.prophet.mean_price.toFixed(2)}
+${t("summary.prophet.ci")}: ${sym}${r.prophet.lower_bound.toFixed(2)} - ${sym}${r.prophet.upper_bound.toFixed(2)}
 ${t("summary.prophet.return")}: ${r.prophet.return.toFixed(2)}%
 ${t("summary.prophet.risk")}: ${t(`summary.prophet.risk.${r.prophet.risk_level}` as any)}`;
     }
@@ -80,25 +82,25 @@ ${t("summary.risk.volatility")}: ${(r.volatility * 100).toFixed(2)}%`;
         <div className="stats-grid">
           <div className="stat-item">
             <div className="stat-label">{t("single.result.currentPrice")}</div>
-            <div className="stat-value">${result.current_price.toFixed(2)}</div>
+            <div className="stat-value">{formatPrice(result.current_price, result.ticker)}</div>
           </div>
           <div className="stat-item">
             <div className="stat-label">{t("single.result.gbmPrice")}</div>
             <div className={`stat-value ${result.gbm.return >= 0 ? "positive" : "negative"}`}>
-              ${result.gbm.mean_price.toFixed(2)}
+              {formatPrice(result.gbm.mean_price, result.ticker)}
             </div>
           </div>
           <div className="stat-item">
             <div className="stat-label">{t("single.result.mcPrice")}</div>
             <div className={`stat-value ${result.mc.return >= 0 ? "positive" : "negative"}`}>
-              ${result.mc.mean_price.toFixed(2)}
+              {formatPrice(result.mc.mean_price, result.ticker)}
             </div>
           </div>
           {result.prophet && (
             <div className="stat-item">
               <div className="stat-label">{t("single.result.prophetPrice")}</div>
               <div className={`stat-value ${result.prophet.return >= 0 ? "positive" : "negative"}`}>
-                ${result.prophet.mean_price.toFixed(2)}
+                {formatPrice(result.prophet.mean_price, result.ticker)}
               </div>
             </div>
           )}
@@ -110,11 +112,11 @@ ${t("summary.risk.volatility")}: ${(r.volatility * 100).toFixed(2)}%`;
           </div>
           <div className="stat-item">
             <div className="stat-label">{t("single.result.percentile5")}</div>
-            <div className="stat-value">${result.gbm.percentile_5.toFixed(2)}</div>
+            <div className="stat-value">{formatPrice(result.gbm.percentile_5, result.ticker)}</div>
           </div>
           <div className="stat-item">
             <div className="stat-label">{t("single.result.percentile95")}</div>
-            <div className="stat-value">${result.gbm.percentile_95.toFixed(2)}</div>
+            <div className="stat-value">{formatPrice(result.gbm.percentile_95, result.ticker)}</div>
           </div>
         </div>
       </div>

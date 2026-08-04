@@ -8,6 +8,7 @@ import {
   Stock,
 } from "../api/predict";
 import { useI18n } from "../i18n/context";
+import { formatPrice } from "../utils/currency";
 
 interface Props {
   defaultDate: string;
@@ -264,12 +265,12 @@ function BatchResult({ data }: { data: BatchPredictResult }) {
                     <br />
                     <small>{r.name}</small>
                   </td>
-                  <td>${r.current_price.toFixed(2)}</td>
-                  <td>${r.gbm_mean_price.toFixed(2)}</td>
+                  <td>{formatPrice(r.current_price, r.ticker)}</td>
+                  <td>{formatPrice(r.gbm_mean_price, r.ticker)}</td>
                   <td className={r.gbm_return >= 0 ? "positive" : "negative"}>
                     {r.gbm_return.toFixed(2)}%
                   </td>
-                  <td>${r.mc_mean_price.toFixed(2)}</td>
+                  <td>{formatPrice(r.mc_mean_price, r.ticker)}</td>
                   <td className={r.mc_return >= 0 ? "positive" : "negative"}>
                     {r.mc_return.toFixed(2)}%
                   </td>

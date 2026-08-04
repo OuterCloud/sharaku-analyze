@@ -8,6 +8,7 @@ import {
   QuickPredictItem,
 } from "../api/predict";
 import { useI18n } from "../i18n/context";
+import { formatPrice } from "../utils/currency";
 
 type Category = "gainers" | "losers" | "actives";
 
@@ -243,7 +244,7 @@ export default function MarketTab({ onTickerClick }: MarketTabProps) {
       const sign = modelPred.returnPct >= 0 ? "+" : "";
       return (
         <td className="predict-cell">
-          <span className="predict-price">${modelPred.price.toFixed(2)}</span>
+          <span className="predict-price">{formatPrice(modelPred.price, ticker)}</span>
           <br />
           <span className="predict-return" style={{ color }}>
             {sign}{(modelPred.returnPct * 100).toFixed(1)}%
@@ -401,7 +402,7 @@ export default function MarketTab({ onTickerClick }: MarketTabProps) {
                         <br />
                         <small>{m.name}</small>
                       </td>
-                      <td>${m.price.toFixed(2)}</td>
+                      <td>{formatPrice(m.price, m.ticker)}</td>
                       <td className={m.change >= 0 ? "positive" : "negative"}>
                         {m.change >= 0 ? "+" : ""}
                         {m.change.toFixed(2)}
@@ -441,7 +442,7 @@ export default function MarketTab({ onTickerClick }: MarketTabProps) {
                 </div>
                 <div className="market-card-name">{m.name}</div>
                 <div className="market-card-details">
-                  <span>${m.price.toFixed(2)}</span>
+                  <span>{formatPrice(m.price, m.ticker)}</span>
                   <span>{formatVolume(m.volume)}</span>
                 </div>
               </div>

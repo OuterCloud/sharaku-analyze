@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { analyzeWheel, WheelResult } from "../api/predict";
 import { useI18n } from "../i18n/context";
+import { formatPrice, getCurrencySymbol } from "../utils/currency";
 import StockSearch from "./StockSearch";
 import Watchlist from "./Watchlist";
 
@@ -45,11 +46,11 @@ function WheelResultView({ result }: { result: WheelResult }) {
         <div className="stats-grid">
           <div className="stat-item">
             <div className="stat-label">{t("wheel.currentPrice")}</div>
-            <div className="stat-value">${result.current_price.toFixed(2)}</div>
+            <div className="stat-value">{formatPrice(result.current_price, result.ticker)}</div>
           </div>
           <div className="stat-item">
             <div className="stat-label">{t("wheel.ema20")}</div>
-            <div className="stat-value">${result.ema_20.toFixed(2)}</div>
+            <div className="stat-value">{formatPrice(result.ema_20, result.ticker)}</div>
           </div>
           <div className="stat-item">
             <div className="stat-label">{t("wheel.emaDeviation")}</div>
@@ -102,7 +103,7 @@ function WheelResultView({ result }: { result: WheelResult }) {
           <div className="stats-grid">
             <div className="stat-item">
               <div className="stat-label">{t("wheel.sellPut.strike")}</div>
-              <div className="stat-value">${result.sell_put.recommended_strike}</div>
+              <div className="stat-value">{getCurrencySymbol(result.ticker)}{result.sell_put.recommended_strike}</div>
             </div>
             <div className="stat-item">
               <div className="stat-label">{t("wheel.sellPut.distance")}</div>
@@ -112,7 +113,7 @@ function WheelResultView({ result }: { result: WheelResult }) {
             </div>
             <div className="stat-item">
               <div className="stat-label">{t("wheel.sellPut.cash")}</div>
-              <div className="stat-value">${result.sell_put.cash_required!.toLocaleString()}</div>
+              <div className="stat-value">{getCurrencySymbol(result.ticker)}{result.sell_put.cash_required!.toLocaleString()}</div>
             </div>
           </div>
         )}
@@ -125,7 +126,7 @@ function WheelResultView({ result }: { result: WheelResult }) {
         <div className="result-card">
           <h3 className="result-title">{t("wheel.coveredCall")}</h3>
           <div style={{ fontSize: "0.9em", color: "var(--text-secondary)", marginBottom: "12px" }}>
-            {t("wheel.coveredCall.cost")}: ${result.covered_call.cost_basis!.toFixed(2)}
+            {t("wheel.coveredCall.cost")}: {formatPrice(result.covered_call.cost_basis!, result.ticker)}
           </div>
           <div className="wheel-decision" style={{ borderLeft: `4px solid ${statusColor(result.covered_call.status)}`, paddingLeft: "16px", marginBottom: "16px" }}>
             <div style={{ fontSize: "1.1em", fontWeight: 600, marginBottom: "8px" }}>
@@ -139,7 +140,7 @@ function WheelResultView({ result }: { result: WheelResult }) {
             <div className="stats-grid">
               <div className="stat-item">
                 <div className="stat-label">{t("wheel.coveredCall.strike")}</div>
-                <div className="stat-value">${result.covered_call.recommended_strike}</div>
+                <div className="stat-value">{getCurrencySymbol(result.ticker)}{result.covered_call.recommended_strike}</div>
               </div>
               <div className="stat-item">
                 <div className="stat-label">{t("wheel.coveredCall.distance")}</div>
