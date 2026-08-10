@@ -317,7 +317,8 @@ body {
 
 .stock-search-input {
   width: 100%;
-  padding: 10px 36px 10px 12px;
+  /* 右侧留出清除按钮可见圆形（右起 14~38px）的空间 */
+  padding: 10px 42px 10px 12px;
   border: 1px solid var(--border-input);
   border-radius: 8px;
   font-size: 1em;
@@ -339,12 +340,9 @@ body {
   transform: translateY(-50%);
   border: none;
   background: none;
-  color: #555;
+  /* 44px 仅作为触摸目标，本身不可见 */
   width: 44px;
   height: 44px;
-  border-radius: 50%;
-  font-size: 1.3em;
-  line-height: 1;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -353,11 +351,38 @@ body {
   z-index: 10;
 }
 
+/* 可见部分：小圆形，尺寸独立于触摸区 */
+.stock-search-clear-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  color: var(--text-muted);
+  font-size: 1.15em;
+  line-height: 1;
+  transition: background 0.15s, color 0.15s;
+}
+
 @media (hover: hover) {
-  .stock-search-clear:hover {
-    background: #bbb;
-    color: #222;
+  .stock-search-clear:hover .stock-search-clear-icon {
+    background: var(--bg-hover);
+    color: var(--text-primary);
   }
+}
+
+.stock-search-clear:active .stock-search-clear-icon {
+  background: var(--bg-copy-btn-hover);
+}
+
+.stock-search-clear:focus-visible {
+  outline: none;
+}
+
+.stock-search-clear:focus-visible .stock-search-clear-icon {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .stock-dropdown {
@@ -1485,4 +1510,451 @@ th.sortable:hover {
   margin-left: 28px;
   font-size: 0.85em;
   color: var(--text-secondary);
+}
+
+/* ==================== Advisor Tab ==================== */
+
+.advisor-warning {
+  padding: 12px 16px;
+  background: var(--bg-warning);
+  border: 1px solid var(--border-warning);
+  border-radius: 8px;
+  color: #8c6d1f;
+  font-size: 0.9em;
+  margin-bottom: 16px;
+}
+
+.advisor-params {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.advisor-params .form-group {
+  margin-bottom: 16px;
+}
+
+/* --- 知识库概况 --- */
+
+.advisor-kb-bar {
+  margin-bottom: 16px;
+}
+
+.advisor-kb-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: var(--bg-tag);
+  border: 1px solid var(--border-tag);
+  border-radius: 8px;
+  color: var(--accent);
+  font-size: 0.85em;
+  cursor: pointer;
+}
+
+.advisor-kb-arrow {
+  font-size: 0.7em;
+}
+
+.advisor-kb-list {
+  margin-top: 8px;
+  background: var(--bg-stat);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.advisor-kb-item {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 14px;
+  font-size: 0.85em;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.advisor-kb-item:last-child {
+  border-bottom: none;
+}
+
+.advisor-kb-title {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.advisor-kb-path {
+  color: var(--text-muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.9em;
+}
+
+.advisor-kb-chars {
+  color: var(--text-light);
+  font-variant-numeric: tabular-nums;
+}
+
+.advisor-kb-empty {
+  padding: 14px;
+  font-size: 0.85em;
+  color: var(--text-muted);
+}
+
+/* --- 预设问题 --- */
+
+.advisor-presets {
+  margin-bottom: 20px;
+}
+
+.advisor-presets-label {
+  font-size: 0.85em;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+.advisor-presets-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.advisor-preset-btn {
+  padding: 10px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-input);
+  border-radius: 20px;
+  color: var(--text-primary);
+  font-size: 0.88em;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.advisor-preset-btn:hover:not(:disabled) {
+  border-color: var(--border-tag);
+  background: var(--bg-hover);
+}
+
+.advisor-preset-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* --- 对话区 --- */
+
+.advisor-chat {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.advisor-msg {
+  border-radius: 12px;
+  padding: 14px 18px;
+}
+
+.advisor-msg-user {
+  background: var(--bg-tag);
+  border: 1px solid var(--border-tag);
+  align-self: flex-end;
+  max-width: 85%;
+  white-space: pre-wrap;
+}
+
+.advisor-msg-assistant {
+  background: var(--bg-card);
+  box-shadow: var(--shadow-card);
+}
+
+.advisor-msg-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.advisor-msg-role {
+  font-size: 0.85em;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.advisor-msg-body {
+  color: var(--text-primary);
+  line-height: 1.7;
+  overflow-wrap: break-word;
+}
+
+/* 流式输入指示器 */
+.advisor-typing {
+  display: flex;
+  gap: 5px;
+  margin-top: 10px;
+}
+
+.advisor-typing span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: advisor-blink 1.2s infinite ease-in-out both;
+}
+
+.advisor-typing span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.advisor-typing span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes advisor-blink {
+  0%, 80%, 100% { opacity: 0.25; }
+  40% { opacity: 1; }
+}
+
+/* 滚离底部时出现的"跳到最新"按钮。
+   绝对定位于 sticky 输入区上方——脱离文档流，显隐不改变 scrollHeight，
+   否则会与贴底判定形成反馈回路导致闪烁。 */
+.advisor-jump-latest {
+  position: absolute;
+  top: -46px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 8px 18px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  font-size: 0.85em;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+  z-index: 11;
+  animation: advisor-jump-in 0.15s ease-out;
+}
+
+.advisor-jump-latest:hover {
+  opacity: 0.9;
+}
+
+@keyframes advisor-jump-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(6px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* --- 输入区 --- */
+
+.advisor-input-area {
+  position: sticky;
+  bottom: 0;
+  background: var(--bg-body);
+  padding-top: 12px;
+  /* 高于消息气泡与"跳到最新"按钮，避免滚动过程中被内容压住 */
+  z-index: 10;
+}
+
+.advisor-textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--border-input);
+  border-radius: 8px;
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-size: 0.95em;
+  font-family: inherit;
+  line-height: 1.6;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.advisor-textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.advisor-textarea:disabled {
+  opacity: 0.6;
+}
+
+.advisor-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  align-items: center;
+}
+
+.advisor-actions .btn {
+  margin-bottom: 0;
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 20px;
+  height: 44px;
+  background: var(--bg-copy-btn);
+  border: 1px solid var(--border-input);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 0.95em;
+  cursor: pointer;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--bg-copy-btn-hover);
+}
+
+.btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.advisor-hint {
+  margin-top: 8px;
+  font-size: 0.78em;
+  color: var(--text-light);
+}
+
+/* ==================== Markdown 渲染 ==================== */
+
+.markdown-body .md-h1,
+.markdown-body .md-h2,
+.markdown-body .md-h3,
+.markdown-body .md-h4,
+.markdown-body .md-h5,
+.markdown-body .md-h6 {
+  margin: 18px 0 10px;
+  line-height: 1.35;
+  color: var(--text-primary);
+}
+
+.markdown-body .md-h1 { font-size: 1.4em; }
+.markdown-body .md-h2 { font-size: 1.25em; }
+.markdown-body .md-h3 { font-size: 1.1em; }
+.markdown-body .md-h4,
+.markdown-body .md-h5,
+.markdown-body .md-h6 { font-size: 1em; }
+
+.markdown-body > *:first-child {
+  margin-top: 0;
+}
+
+.markdown-body p {
+  margin: 8px 0;
+}
+
+.markdown-body .md-list {
+  margin: 8px 0;
+  padding-left: 22px;
+}
+
+.markdown-body .md-list li {
+  margin: 5px 0;
+}
+
+.markdown-body code {
+  padding: 2px 6px;
+  background: var(--bg-stat);
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.88em;
+}
+
+.markdown-body .md-pre {
+  margin: 12px 0;
+  padding: 14px;
+  background: var(--bg-summary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow-x: auto;
+}
+
+.markdown-body .md-pre code {
+  padding: 0;
+  background: none;
+  font-size: 0.85em;
+  line-height: 1.6;
+}
+
+.markdown-body .md-quote {
+  margin: 12px 0;
+  padding: 4px 16px;
+  border-left: 3px solid var(--border-tag);
+  background: var(--bg-stat);
+  border-radius: 0 6px 6px 0;
+  color: var(--text-secondary);
+}
+
+.markdown-body .md-table {
+  width: 100%;
+  margin: 12px 0;
+  border-collapse: collapse;
+  font-size: 0.9em;
+}
+
+.markdown-body .md-table th,
+.markdown-body .md-table td {
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  text-align: left;
+}
+
+.markdown-body .md-table th {
+  background: var(--bg-stat);
+  font-weight: 600;
+}
+
+.markdown-body hr {
+  margin: 18px 0;
+  border: none;
+  border-top: 1px solid var(--border-color);
+}
+
+.markdown-body a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.markdown-body a:hover {
+  text-decoration: underline;
+}
+
+.markdown-body strong {
+  font-weight: 600;
+}
+
+/* --- 移动端适配 --- */
+
+@media (max-width: 640px) {
+  .advisor-params {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .advisor-msg-user {
+    max-width: 95%;
+  }
+
+  .advisor-kb-item {
+    grid-template-columns: 1fr auto;
+  }
+
+  .advisor-kb-path {
+    display: none;
+  }
+
+  .advisor-presets-grid {
+    flex-direction: column;
+  }
+
+  .advisor-preset-btn {
+    width: 100%;
+    text-align: left;
+    border-radius: 8px;
+  }
 }

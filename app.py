@@ -15,11 +15,13 @@ import uvicorn
 from diskcache import Cache
 from dotenv import load_dotenv
 from fastapi import FastAPI, Form, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from loguru import logger
 
 from sharaku import DataUtils, GBMPredictor, MonteCarloPredictor, ProphetPredictor, StockDatabase, TechnicalAnalyzer, analyze_wheel_strategy
+from sharaku.config import Path as SharakuPath
+from sharaku.lib.advisor import InvestmentAdvisor
 from sharaku.lib.market_session import fetch_us_market_movers, fetch_us_market_movers_by_tickers, get_us_market_session
 from sharaku.lib.visualization import (
     generate_batch_chart,
@@ -29,7 +31,10 @@ from sharaku.lib.visualization import (
     generate_prophet_chart,
 )
 
-load_dotenv()
+# override=True：项目内的 .env 是本项目配置的唯一权威来源。
+# 默认的 override=False 会让 shell 中残留的同名变量（如旧的 LLM_API_KEY）
+# 静默覆盖 .env，导致改了配置却不生效、且报错指向一个你以为已经换掉的值。
+load_dotenv(override=True)
 
 # Disable matplotlib warnings
 warnings.filterwarnings("ignore", category=UserWarning, module="matplotlib")
@@ -110,13 +115,27 @@ def _calc_trading_days(target_date: str, prepared_data: dict) -> int:
     return (target_dt.date() - last_date).days
 
 
+import json
+
 # --- Database ---
 stock_db = StockDatabase()
+
+# --- Investment Advisor (LLM) ---
+advisor = InvestmentAdvisor(knowledge_dir=SharakuPath.knowledge_dir())
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Sharaku Analyze starting...")
+    # 输出顾问模块的生效配置（key 仅掩码显示），避免配置未生效时难以排查
+    if advisor.is_configured():
+        key = advisor.api_key
+        masked = f"{key[:7]}...{key[-4:]}" if len(key) > 12 else "***"
+        logger.info(f"Advisor: model={advisor.model} key={masked} base_url={advisor.base_url or 'default'}")
+        logger.info(f"Advisor: knowledge_dir={advisor.knowledge_base.root_dir} "
+                    f"docs={advisor.knowledge_stats()['doc_count']}")
+    else:
+        logger.warning("Advisor: LLM_API_KEY 未配置，投资顾问模块不可用")
     yield
     logger.info("Sharaku Analyze shutting down.")
 
@@ -685,6 +704,110 @@ async def market_movers(category: str = "all", tickers: str = ""):
     except Exception as e:
         logger.error(f"Market movers failed: {e}")
         return JSONResponse(content={"success": False, "error": str(e)}, status_code=500)
+
+
+# ==================== Investment Advisor (LLM) ====================
+
+# 市场上下文缓存 TTL（同一标的追问时复用，避免重复采集数据）
+ADVISOR_CONTEXT_TTL = 300
+
+
+@app.get("/api/advisor/status")
+async def advisor_status():
+    """顾问模块状态：LLM 是否已配置、知识库概况"""
+    try:
+        stats = advisor.knowledge_stats()
+        return JSONResponse(content={
+            "success": True,
+            "configured": advisor.is_configured(),
+            "model": advisor.model,
+            "knowledge": stats,
+        })
+    except Exception as e:
+        logger.error(f"Advisor status failed: {e}")
+        return JSONResponse(content={"success": False, "error": str(e)}, status_code=500)
+
+
+@app.post("/api/advisor/chat")
+async def advisor_chat(
+    ticker: str = Form(...),
+    question: str = Form(...),
+    cost_basis: float = Form(0),
+    horizon_days: int = Form(30),
+    history: str = Form("[]"),
+    use_cached_context: str = Form("1"),
+):
+    """
+    投资顾问对话（SSE 流式输出）。
+
+    Form 参数：
+        ticker: 股票代码
+        question: 用户提问
+        cost_basis: 持仓成本（0 表示未持仓）
+        horizon_days: 统计预测跨度
+        history: JSON 数组，形如 [{"role":"user","content":"..."}]
+        use_cached_context: "1" 时复用缓存的市场上下文（追问场景）
+    """
+    ticker = ticker.upper().strip()
+    if not ticker:
+        raise HTTPException(status_code=400, detail="ticker 不能为空")
+    if not question.strip():
+        raise HTTPException(status_code=400, detail="question 不能为空")
+
+    try:
+        parsed_history = json.loads(history) if history else []
+        if not isinstance(parsed_history, list):
+            parsed_history = []
+        # 只保留合法的 role/content 结构
+        parsed_history = [
+            {"role": m["role"], "content": m["content"]}
+            for m in parsed_history
+            if isinstance(m, dict)
+            and m.get("role") in ("user", "assistant")
+            and isinstance(m.get("content"), str)
+            and m["content"].strip()
+        ]
+    except (json.JSONDecodeError, TypeError, KeyError):
+        parsed_history = []
+
+    # 自动入库
+    if not stock_db.get_stock_by_ticker(ticker):
+        stock_db.add_stock(ticker, ticker, "", _detect_market(ticker, ""))
+
+    # 复用市场上下文（同一标的的追问不必重新采集全量数据）
+    ctx_cache_key = f"advisor_ctx:{ticker}:{cost_basis}:{horizon_days}"
+    cached_context = None
+    if use_cached_context == "1":
+        cached_context = _cache.get(ctx_cache_key)
+
+    def event_stream():
+        def cache_context(ctx: dict):
+            _cache.set(ctx_cache_key, ctx, expire=ADVISOR_CONTEXT_TTL)
+
+        try:
+            for event in advisor.stream_chat(
+                ticker=ticker,
+                question=question,
+                cost_basis=cost_basis,
+                horizon_days=horizon_days,
+                history=parsed_history,
+                cached_context=cached_context,
+                on_context=cache_context,
+            ):
+                yield f"data: {json.dumps(event, ensure_ascii=False)}\n\n"
+        except Exception as e:
+            logger.error(f"Advisor stream failed: {e}")
+            yield f"data: {json.dumps({'type': 'error', 'message': str(e)}, ensure_ascii=False)}\n\n"
+
+    return StreamingResponse(
+        event_stream(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",  # 禁用 nginx 缓冲，保证流式实时性
+        },
+    )
 
 
 # ==================== SPA Fallback ====================

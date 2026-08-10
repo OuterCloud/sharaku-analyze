@@ -10,6 +10,7 @@ const en: Record<TranslationKey, string> = {
   "tab.batch": "Batch Predict",
   "tab.technical": "Technical",
   "tab.wheel": "Wheel Strategy",
+  "tab.advisor": "AI Advisor",
 
   // Common
   "common.selectStock": "Select Stock",
@@ -164,6 +165,28 @@ const en: Record<TranslationKey, string> = {
   "summary.prophet.risk.high": "High",
   "summary.risk.title": "Risk Assessment",
   "summary.risk.volatility": "Annualized Volatility",
+
+  // AdvisorTab
+  "advisor.assistant": "Advisor",
+  "advisor.costBasis": "Cost Basis (optional)",
+  "advisor.costBasisPlaceholder": "Leave blank if no position",
+  "advisor.horizon": "Analysis Horizon",
+  "advisor.knowledgeBase": "Knowledge Base",
+  "advisor.docs": "notes",
+  "advisor.knowledgeEmpty": "Knowledge base is empty. Drop your investment notes into the knowledge/ directory.",
+  "advisor.presetsLabel": "Quick Questions",
+  "advisor.preset.goodPrice": "Is this a good price right now?",
+  "advisor.preset.entry": "How should I structure entry points and position sizing?",
+  "advisor.preset.options": "What options strategy do you recommend? Give specific parameters",
+  "advisor.preset.risk": "Where is the biggest risk? Where should the stop-loss be?",
+  "advisor.preset.full": "Give me a complete investment decision analysis",
+  "advisor.inputPlaceholder": "Ask anything, e.g.: If it drops to MA60, should I add or sell puts?",
+  "advisor.send": "Send",
+  "advisor.stop": "Stop",
+  "advisor.clear": "Clear Chat",
+  "advisor.sendHint": "Cmd/Ctrl + Enter to send",
+  "advisor.jumpToLatest": "Jump to latest",
+  "advisor.notConfigured": "LLM_API_KEY is not configured. Set it in .env at the project root and restart the server.",
 };
 
 export default en;

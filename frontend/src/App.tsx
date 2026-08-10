@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import AdvisorTab from "./components/AdvisorTab";
 import BatchTab from "./components/BatchTab";
 import Footer from "./components/Footer";
 import Header from "./components/Header";
@@ -8,9 +9,9 @@ import TechnicalTab from "./components/TechnicalTab";
 import WheelTab from "./components/WheelTab";
 import { useI18n } from "./i18n/context";
 
-type Tab = "market" | "single" | "batch" | "wheel" | "technical";
+type Tab = "market" | "single" | "batch" | "wheel" | "technical" | "advisor";
 
-const TABS: Tab[] = ["market", "single", "batch", "technical", "wheel"];
+const TABS: Tab[] = ["market", "single", "batch", "technical", "wheel", "advisor"];
 
 const defaultDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
   .toISOString()
@@ -25,8 +26,8 @@ export default function App() {
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       const meta = e.metaKey || e.ctrlKey;
-      // Cmd/Ctrl + 1~5: switch tabs
-      if (meta && e.key >= "1" && e.key <= "5") {
+      // Cmd/Ctrl + 1~6: switch tabs
+      if (meta && e.key >= "1" && e.key <= "6") {
         e.preventDefault();
         setActiveTab(TABS[parseInt(e.key) - 1]);
         return;
@@ -117,6 +118,12 @@ export default function App() {
           >
             {t("tab.wheel")}
           </button>
+          <button
+            className={`tab${activeTab === "advisor" ? " active" : ""}`}
+            onClick={() => setActiveTab("advisor")}
+          >
+            {t("tab.advisor")}
+          </button>
         </div>
 
         <div className="tab-contents">
@@ -134,6 +141,9 @@ export default function App() {
           </div>
           <div style={{ display: activeTab === "wheel" ? "block" : "none" }}>
             <WheelTab />
+          </div>
+          <div style={{ display: activeTab === "advisor" ? "block" : "none" }}>
+            <AdvisorTab />
           </div>
         </div>
       </div>

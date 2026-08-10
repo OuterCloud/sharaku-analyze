@@ -8,6 +8,7 @@ const zh = {
   "tab.batch": "批量预测",
   "tab.technical": "技术分析",
   "tab.wheel": "Wheel策略",
+  "tab.advisor": "投资顾问",
 
   // Common
   "common.selectStock": "选择股票",
@@ -162,6 +163,28 @@ const zh = {
   "summary.prophet.risk.high": "高",
   "summary.risk.title": "风险评估",
   "summary.risk.volatility": "年化波动率",
+
+  // AdvisorTab
+  "advisor.assistant": "投资顾问",
+  "advisor.costBasis": "持仓成本价（可选）",
+  "advisor.costBasisPlaceholder": "留空表示未持仓",
+  "advisor.horizon": "分析跨度",
+  "advisor.knowledgeBase": "知识库",
+  "advisor.docs": "篇笔记",
+  "advisor.knowledgeEmpty": "知识库为空，把你的投资笔记放到项目 knowledge/ 目录即可生效",
+  "advisor.presetsLabel": "快速提问",
+  "advisor.preset.goodPrice": "现在是好价格吗？",
+  "advisor.preset.entry": "该怎么设计入场点和仓位？",
+  "advisor.preset.options": "推荐什么期权策略？给出具体参数",
+  "advisor.preset.risk": "最大风险在哪？止损位设在哪？",
+  "advisor.preset.full": "给我一份完整的投资决策分析",
+  "advisor.inputPlaceholder": "自由提问，例如：如果跌到 MA60 我该加仓还是卖 Put？",
+  "advisor.send": "发送",
+  "advisor.stop": "停止生成",
+  "advisor.clear": "清空对话",
+  "advisor.sendHint": "Cmd/Ctrl + Enter 发送",
+  "advisor.jumpToLatest": "跳到最新",
+  "advisor.notConfigured": "未配置 LLM_API_KEY，投资顾问不可用。请在项目根目录的 .env 中设置后重启服务。",
 } as const;
 
 export type TranslationKey = keyof typeof zh;

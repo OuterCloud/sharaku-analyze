@@ -13,5 +13,8 @@ diskcache>=5.6
 requests>=2.28
 pytz>=2023.0
 
+# LLM 投资顾问（OpenAI 兼容接口）
+openai>=1.40,<2.0
+
 # Prophet (时间序列预测, 首次安装较慢)
 prophet>=1.1

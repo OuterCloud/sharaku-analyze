@@ -23,6 +23,12 @@ env/
 # Environment
 .env
 
+# 个人投资笔记：含实名、持仓、真实盈亏等敏感信息，不纳入版本库。
+# 仅保留使用说明与示例模板，便于他人复现目录结构。
+knowledge/*
+!knowledge/README.md
+!knowledge/principles.example.md
+
 # OS
 .DS_Store
 Thumbs.db

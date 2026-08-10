@@ -106,7 +106,11 @@ export default function StockSearch({ onSelect, value }: Props) {
             type="button"
             aria-label={t("search.clear")}
           >
-            &times;
+            {/* 图标独立成元素：44px 按钮保证触摸目标，视觉圆形只作用于此 span，
+                避免 hover 时出现与输入框等高、顶破圆角的大色块 */}
+            <span className="stock-search-clear-icon" aria-hidden="true">
+              &times;
+            </span>
           </button>
         )}
       </div>
