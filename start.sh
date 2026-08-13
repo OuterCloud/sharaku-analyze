@@ -46,13 +46,13 @@ echo "  -> Python: $(python --version)"
 # ---------- 依赖安装 ----------
 echo ""
 echo "[2/3] 安装依赖..."
-pip install --quiet --upgrade pip
-pip install --quiet -r "$ROOT_DIR/requirements.txt"
+pip install --quiet --upgrade pip -i https://pypi.tuna.tsinghua.edu.cn/simple
+pip install --quiet -r "$ROOT_DIR/requirements.txt" -i https://pypi.tuna.tsinghua.edu.cn/simple
 echo "  -> Python 依赖完成"
 
 cd "$FRONTEND_DIR"
 if [ ! -d "node_modules" ]; then
-    npm install --silent
+    npm install --silent --registry=https://registry.npmmirror.com
     echo "  -> node_modules 安装完成"
 else
     echo "  -> node_modules 已存在，跳过安装"

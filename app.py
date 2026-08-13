@@ -23,6 +23,7 @@ from sharaku import DataUtils, GBMPredictor, MonteCarloPredictor, ProphetPredict
 from sharaku.config import Path as SharakuPath
 from sharaku.lib.advisor import InvestmentAdvisor
 from sharaku.lib.market_session import fetch_us_market_movers, fetch_us_market_movers_by_tickers, get_us_market_session
+from sharaku.lib.screener import run_screener
 from sharaku.lib.visualization import (
     generate_batch_chart,
     generate_cumulative_returns_chart,
@@ -703,6 +704,63 @@ async def market_movers(category: str = "all", tickers: str = ""):
 
     except Exception as e:
         logger.error(f"Market movers failed: {e}")
+        return JSONResponse(content={"success": False, "error": str(e)}, status_code=500)
+
+
+# ==================== Stock Screener ====================
+
+SCREENER_CACHE_TTL = 1800  # 30 minutes for screener results
+
+
+@app.post("/api/screener/run")
+async def screener_run(
+    peg_max: float = Form(1.0),
+    roe_min: float = Form(0.12),
+    min_market_cap: float = Form(10_000_000_000),
+    de_max: float = Form(100.0),
+    fcf_positive: str = Form("1"),
+    sectors: str = Form(""),
+):
+    """
+    执行 S&P 500 量化选股。
+
+    Form 参数：
+        peg_max: PEG 上限（默认 1.0）
+        roe_min: ROE 最低要求（默认 0.12 即 12%）
+        min_market_cap: 最低市值（默认 $10B）
+        de_max: D/E 最大值（默认 100%）
+        fcf_positive: 是否要求正 FCF（"1" 或 "0"）
+        sectors: 板块过滤，逗号分隔（空则使用默认板块列表）
+    """
+    try:
+        # 构建参数
+        params = {
+            "peg_max": peg_max,
+            "roe_min": roe_min,
+            "min_market_cap": min_market_cap,
+            "de_max": de_max,
+            "fcf_positive": fcf_positive == "1",
+        }
+
+        if sectors.strip():
+            params["sectors"] = [s.strip() for s in sectors.split(",") if s.strip()]
+
+        # 检查缓存
+        cache_key = f"screener:{peg_max}:{roe_min}:{min_market_cap}:{de_max}:{fcf_positive}:{sectors}"
+        cached = _cache_get(cache_key)
+        if cached:
+            return JSONResponse(content=cached)
+
+        # 执行筛选（耗时操作，约 30-60s）
+        result = run_screener(params)
+
+        if result["success"]:
+            _cache.set(cache_key, result, expire=SCREENER_CACHE_TTL)
+
+        return JSONResponse(content=result)
+
+    except Exception as e:
+        logger.error(f"Screener failed: {e}")
         return JSONResponse(content={"success": False, "error": str(e)}, status_code=500)
 
 

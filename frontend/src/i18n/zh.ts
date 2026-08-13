@@ -8,6 +8,7 @@ const zh = {
   "tab.batch": "批量预测",
   "tab.technical": "技术分析",
   "tab.wheel": "Wheel策略",
+  "tab.screener": "量化选股",
   "tab.advisor": "投资顾问",
 
   // Common
@@ -185,6 +186,35 @@ const zh = {
   "advisor.sendHint": "Cmd/Ctrl + Enter 发送",
   "advisor.jumpToLatest": "跳到最新",
   "advisor.notConfigured": "未配置 LLM_API_KEY，投资顾问不可用。请在项目根目录的 .env 中设置后重启服务。",
+
+  // ScreenerTab
+  "screener.params.title": "筛选条件",
+  "screener.params.pegMax": "PEG 上限",
+  "screener.params.roeMin": "ROE 最低 (%)",
+  "screener.params.marketCap": "最低市值 ($B)",
+  "screener.params.deMax": "D/E 上限 (%)",
+  "screener.params.fcfPositive": "要求正自由现金流 (FCF > 0)",
+  "screener.params.sectors": "目标板块",
+  "screener.run": "开始选股",
+  "screener.running": "正在筛选...",
+  "screener.loading": "正在扫描标普 500 成分股...",
+  "screener.loadingHint": "首次运行约需 30-60 秒，结果将缓存 30 分钟",
+  "screener.error.noSectors": "请至少选择一个板块",
+  "screener.result.title": "筛选结果",
+  "screener.result.summary": "共扫描 {scanned} 只，命中 {found} 只",
+  "screener.explain.title": "💡 为什么选出这些股票？",
+  "screener.explain.body": "以下标的同时满足：估值低于成长速度（PEG<1 意味着股价相对盈利增速被低估）、资本回报率高（ROE≥12% 说明公司赚钱效率强）、有真金白银进账（正自由现金流）、债务可控。它们是\"便宜的好公司\"候选池，适合进一步深入研究。",
+  "screener.explain.peg": "越低越便宜（<1 表示成长性被低估）",
+  "screener.explain.roe": "越高越好（公司用股东的钱赚钱的效率）",
+  "screener.explain.de": "越低越安全（公司借了多少债）",
+  "screener.explain.fcf": "自由现金流（公司实际赚到手的钱）",
+  "screener.table.symbol": "代码",
+  "screener.table.name": "名称",
+  "screener.table.sector": "板块",
+  "screener.table.marketCap": "市值",
+  "screener.table.growth": "营收增长",
+  "screener.noResults": "未找到符合条件的标的",
+  "screener.noResultsHint": "尝试放宽 PEG 上限或降低 ROE 要求",
 } as const;
 
 export type TranslationKey = keyof typeof zh;

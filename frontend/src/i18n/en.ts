@@ -10,6 +10,7 @@ const en: Record<TranslationKey, string> = {
   "tab.batch": "Batch Predict",
   "tab.technical": "Technical",
   "tab.wheel": "Wheel Strategy",
+  "tab.screener": "Screener",
   "tab.advisor": "AI Advisor",
 
   // Common
@@ -187,6 +188,35 @@ const en: Record<TranslationKey, string> = {
   "advisor.sendHint": "Cmd/Ctrl + Enter to send",
   "advisor.jumpToLatest": "Jump to latest",
   "advisor.notConfigured": "LLM_API_KEY is not configured. Set it in .env at the project root and restart the server.",
+
+  // ScreenerTab
+  "screener.params.title": "Screening Criteria",
+  "screener.params.pegMax": "PEG Max",
+  "screener.params.roeMin": "ROE Min (%)",
+  "screener.params.marketCap": "Min Market Cap ($B)",
+  "screener.params.deMax": "D/E Max (%)",
+  "screener.params.fcfPositive": "Require Positive FCF",
+  "screener.params.sectors": "Target Sectors",
+  "screener.run": "Run Screener",
+  "screener.running": "Screening...",
+  "screener.loading": "Scanning S&P 500 constituents...",
+  "screener.loadingHint": "First run takes ~30-60s. Results cached for 30 minutes.",
+  "screener.error.noSectors": "Please select at least one sector",
+  "screener.result.title": "Screening Results",
+  "screener.result.summary": "Scanned {scanned}, found {found} matches",
+  "screener.explain.title": "💡 Why these stocks?",
+  "screener.explain.body": "These stocks pass all filters simultaneously: undervalued relative to growth (PEG<1 means price hasn't caught up with earnings growth), high capital efficiency (ROE≥12%), real cash generation (positive FCF), and manageable debt. They are candidates for \"cheap quality\" — worth deeper research.",
+  "screener.explain.peg": "Lower = cheaper (below 1 means growth is underpriced)",
+  "screener.explain.roe": "Higher = better (how efficiently the company earns on equity)",
+  "screener.explain.de": "Lower = safer (how much debt vs equity)",
+  "screener.explain.fcf": "Free Cash Flow (actual cash the company generates)",
+  "screener.table.symbol": "Symbol",
+  "screener.table.name": "Name",
+  "screener.table.sector": "Sector",
+  "screener.table.marketCap": "Market Cap",
+  "screener.table.growth": "Revenue Growth",
+  "screener.noResults": "No stocks match the criteria",
+  "screener.noResultsHint": "Try increasing PEG max or lowering ROE requirement",
 };
 
 export default en;

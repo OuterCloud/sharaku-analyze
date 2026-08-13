@@ -4,14 +4,15 @@ import BatchTab from "./components/BatchTab";
 import Footer from "./components/Footer";
 import Header from "./components/Header";
 import MarketTab from "./components/MarketTab";
+import ScreenerTab from "./components/ScreenerTab";
 import SingleTab from "./components/SingleTab";
 import TechnicalTab from "./components/TechnicalTab";
 import WheelTab from "./components/WheelTab";
 import { useI18n } from "./i18n/context";
 
-type Tab = "market" | "single" | "batch" | "wheel" | "technical" | "advisor";
+type Tab = "market" | "single" | "batch" | "wheel" | "technical" | "screener" | "advisor";
 
-const TABS: Tab[] = ["market", "single", "batch", "technical", "wheel", "advisor"];
+const TABS: Tab[] = ["market", "single", "batch", "technical", "wheel", "screener", "advisor"];
 
 const defaultDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
   .toISOString()
@@ -26,8 +27,8 @@ export default function App() {
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       const meta = e.metaKey || e.ctrlKey;
-      // Cmd/Ctrl + 1~6: switch tabs
-      if (meta && e.key >= "1" && e.key <= "6") {
+      // Cmd/Ctrl + 1~7: switch tabs
+      if (meta && e.key >= "1" && e.key <= "7") {
         e.preventDefault();
         setActiveTab(TABS[parseInt(e.key) - 1]);
         return;
@@ -119,6 +120,12 @@ export default function App() {
             {t("tab.wheel")}
           </button>
           <button
+            className={`tab${activeTab === "screener" ? " active" : ""}`}
+            onClick={() => setActiveTab("screener")}
+          >
+            {t("tab.screener")}
+          </button>
+          <button
             className={`tab${activeTab === "advisor" ? " active" : ""}`}
             onClick={() => setActiveTab("advisor")}
           >
@@ -141,6 +148,9 @@ export default function App() {
           </div>
           <div style={{ display: activeTab === "wheel" ? "block" : "none" }}>
             <WheelTab />
+          </div>
+          <div style={{ display: activeTab === "screener" ? "block" : "none" }}>
+            <ScreenerTab />
           </div>
           <div style={{ display: activeTab === "advisor" ? "block" : "none" }}>
             <AdvisorTab />
