@@ -91,6 +91,8 @@ class KnowledgeBase:
             for name in filenames:
                 if name.startswith("."):
                     continue
+                if name.lower() in ("readme.md", "readme.markdown"):
+                    continue
                 if name.lower().endswith(_MD_EXTENSIONS):
                     found.append(os.path.join(dirpath, name))
         return sorted(found)

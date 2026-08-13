@@ -23,6 +23,10 @@ export interface ScreenerResultItem {
   dividend_yield_pct: number | null;
   revenue_growth_pct: number | null;
   profit_margin_pct: number | null;
+  current_price: number | null;
+  week52_high: number | null;
+  week52_low: number | null;
+  price_position_pct: number | null;
 }
 
 export interface ScreenerResponse {

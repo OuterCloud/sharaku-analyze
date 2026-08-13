@@ -220,6 +220,17 @@ body {
   color: var(--text-label);
 }
 
+/* Hide number input spinners globally */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
 .form-group input[type="date"] {
   width: 100%;
   padding: 10px 12px;
@@ -331,6 +342,58 @@ body {
 
 .stock-search-input:focus {
   border-color: var(--accent);
+}
+
+select.stock-search-input {
+  padding-right: 36px;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  cursor: pointer;
+}
+
+select.stock-search-input option {
+  background: var(--bg-card, #16213e);
+  color: var(--text-primary, #eee);
+  padding: 8px 12px;
+}
+
+/* Horizon button group (replaces native select) */
+.horizon-btn-group {
+  display: flex;
+  border: 1px solid var(--border-input, #333);
+  border-radius: 8px;
+  overflow: hidden;
+  min-height: 44px;
+}
+
+.horizon-btn {
+  flex: 1;
+  padding: 10px 16px;
+  border: none;
+  background: var(--bg-input, #1a1a2e);
+  color: var(--text-secondary, #aaa);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+  border-right: 1px solid var(--border-input, #333);
+}
+
+.horizon-btn:last-child {
+  border-right: none;
+}
+
+.horizon-btn:hover {
+  background: rgba(102, 126, 234, 0.1);
+  color: var(--text-primary, #eee);
+}
+
+.horizon-btn.active {
+  background: var(--accent, #667eea);
+  color: #fff;
+  font-weight: 500;
 }
 
 .stock-search-clear {
@@ -2158,6 +2221,33 @@ th.sortable:hover {
   width: 30px;
 }
 
+.screener-table .sticky-col {
+  position: sticky;
+  z-index: 1;
+  background: var(--bg-card, #16213e);
+}
+
+.screener-table .sticky-col.col-num {
+  left: 0;
+  min-width: 36px;
+}
+
+.screener-table .sticky-col.col-symbol {
+  left: 36px;
+  min-width: 70px;
+  border-right: 1px solid var(--border-color, #333);
+}
+
+.screener-table .sticky-col.col-price-pos {
+  right: 0;
+  min-width: 110px;
+  border-left: 1px solid var(--border-color, #333);
+}
+
+.screener-table tbody tr:hover .sticky-col {
+  background: rgba(22, 33, 62, 0.97);
+}
+
 .screener-table .symbol-cell {
   color: var(--accent, #667eea);
 }
@@ -2177,6 +2267,43 @@ th.sortable:hover {
 .screener-table .highlight-good {
   color: #27ae60;
   font-weight: 500;
+}
+
+.price-pos-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 90px;
+}
+
+.price-pos-bar {
+  flex: 1;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+  overflow: hidden;
+  min-width: 40px;
+}
+
+.price-pos-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s;
+}
+
+.price-pos-text {
+  font-size: 11px;
+  min-width: 32px;
+  text-align: right;
+  color: #888;
+}
+
+.price-pos-text.high {
+  color: #e74c3c;
+}
+
+.price-pos-text.low {
+  color: #27ae60;
 }
 
 .sector-badge {
@@ -2200,5 +2327,147 @@ th.sortable:hover {
   .screener-table th,
   .screener-table td {
     padding: 8px 6px;
+  }
+}
+
+/* ==================== Settings Tab ==================== */
+
+.settings-description {
+  color: var(--text-secondary, #aaa);
+  font-size: 13px;
+  margin: 4px 0 20px 0;
+}
+
+.settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.settings-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.settings-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary, #eee);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.settings-badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 400;
+}
+
+.settings-badge.success {
+  background: rgba(39, 174, 96, 0.15);
+  color: #27ae60;
+}
+
+.settings-badge.warning {
+  background: rgba(231, 76, 60, 0.15);
+  color: #e74c3c;
+}
+
+.settings-input {
+  background: var(--bg-secondary, #1a1a2e);
+  border: 1px solid var(--border-color, #333);
+  border-radius: 6px;
+  padding: 10px 12px;
+  color: var(--text-primary, #eee);
+  font-size: 14px;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.settings-input:focus {
+  outline: none;
+  border-color: var(--accent, #667eea);
+}
+
+.settings-hint {
+  font-size: 11px;
+  color: #666;
+}
+
+.settings-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.settings-key-display {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.settings-masked-key {
+  background: var(--bg-secondary, #1a1a2e);
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #888;
+  flex: 1;
+  border: 1px solid var(--border-color, #333);
+}
+
+.settings-edit-btn,
+.settings-cancel-btn {
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color, #333);
+  background: transparent;
+  color: var(--accent, #667eea);
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.settings-edit-btn:hover,
+.settings-cancel-btn:hover {
+  background: rgba(102, 126, 234, 0.1);
+}
+
+.settings-key-edit {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.settings-key-edit .settings-input {
+  flex: 1;
+}
+
+.settings-message {
+  margin-top: 16px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.settings-message.success {
+  background: rgba(39, 174, 96, 0.1);
+  border: 1px solid rgba(39, 174, 96, 0.3);
+  color: #27ae60;
+}
+
+.settings-message.error {
+  background: rgba(231, 76, 60, 0.1);
+  border: 1px solid rgba(231, 76, 60, 0.3);
+  color: #e74c3c;
+}
+
+@media (max-width: 768px) {
+  .settings-row {
+    grid-template-columns: 1fr;
   }
 }

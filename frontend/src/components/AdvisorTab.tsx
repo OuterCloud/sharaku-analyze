@@ -87,7 +87,7 @@ function MessageBubble({ turn }: { turn: Turn }) {
   );
 }
 
-export default function AdvisorTab() {
+export default function AdvisorTab({ visible }: { visible?: boolean }) {
   const [ticker, setTicker] = useState("");
   const [costBasis, setCostBasis] = useState("");
   const [horizonDays, setHorizonDays] = useState(30);
@@ -112,7 +112,7 @@ export default function AdvisorTab() {
     getAdvisorStatus()
       .then(setStatus)
       .catch(() => setStatus(null));
-  }, []);
+  }, [visible]);
 
   /** 当前 Tab 是否可见（非激活 Tab 用 display:none，此时 offsetParent 为 null） */
   const isVisible = () => rootRef.current?.offsetParent !== null;
@@ -332,15 +332,17 @@ export default function AdvisorTab() {
         </div>
         <div className="form-group">
           <label>{t("advisor.horizon")}</label>
-          <select
-            className="stock-search-input"
-            value={horizonDays}
-            onChange={(e) => setHorizonDays(parseInt(e.target.value, 10))}
-          >
-            <option value={7}>{t("date.1w")}</option>
-            <option value={30}>{t("date.1m")}</option>
-            <option value={90}>{t("date.3m")}</option>
-          </select>
+          <div className="horizon-btn-group">
+            {[{ value: 7, label: "date.1w" }, { value: 30, label: "date.1m" }, { value: 90, label: "date.3m" }].map((opt) => (
+              <button
+                key={opt.value}
+                className={`horizon-btn${horizonDays === opt.value ? " active" : ""}`}
+                onClick={() => setHorizonDays(opt.value)}
+              >
+                {t(opt.label as never)}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 

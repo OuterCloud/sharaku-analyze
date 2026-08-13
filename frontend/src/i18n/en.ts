@@ -12,6 +12,7 @@ const en: Record<TranslationKey, string> = {
   "tab.wheel": "Wheel Strategy",
   "tab.screener": "Screener",
   "tab.advisor": "AI Advisor",
+  "tab.settings": "Settings",
 
   // Common
   "common.selectStock": "Select Stock",
@@ -210,13 +211,34 @@ const en: Record<TranslationKey, string> = {
   "screener.explain.roe": "Higher = better (how efficiently the company earns on equity)",
   "screener.explain.de": "Lower = safer (how much debt vs equity)",
   "screener.explain.fcf": "Free Cash Flow (actual cash the company generates)",
+  "screener.explain.pricePos": "52-week range position (lower = near bottom, green = safe; red = near highs)",
   "screener.table.symbol": "Symbol",
   "screener.table.name": "Name",
   "screener.table.sector": "Sector",
   "screener.table.marketCap": "Market Cap",
   "screener.table.growth": "Revenue Growth",
+  "screener.table.pricePos": "52W Position",
   "screener.noResults": "No stocks match the criteria",
   "screener.noResultsHint": "Try increasing PEG max or lowering ROE requirement",
+
+  // SettingsTab
+  "settings.llm.title": "LLM Advisor Configuration",
+  "settings.llm.description": "Configure LLM API connection. Changes take effect immediately without restarting.",
+  "settings.llm.keySet": "Configured",
+  "settings.llm.keyNotSet": "Not Set",
+  "settings.llm.keyEmpty": "No API Key set",
+  "settings.llm.keyChange": "Change",
+  "settings.llm.keyPlaceholder": "Enter new API Key",
+  "settings.llm.baseUrlHint": "OpenAI-compatible endpoint (Claude, DeepSeek, etc.)",
+  "settings.llm.model": "Model Name",
+  "settings.llm.tempPlaceholder": "Leave empty for default",
+  "settings.llm.tempHint": "Leave empty to skip. Some models deprecate this parameter.",
+  "settings.llm.knowledgeDir": "Knowledge Directory",
+  "settings.llm.knowledgeDirHint": "Directory for investment notes, relative to project root",
+  "settings.save": "Save Settings",
+  "settings.saving": "Saving...",
+  "settings.saved": "✓ Settings saved and applied",
+  "settings.cancel": "Cancel",
 };
 
 export default en;

@@ -868,6 +868,135 @@ async def advisor_chat(
     )
 
 
+# ==================== Settings ====================
+
+_ENV_FILE = Path(__file__).parent / ".env"
+
+
+def _read_env_file() -> dict[str, str]:
+    """读取 .env 文件为字典"""
+    env_vars = {}
+    if _ENV_FILE.exists():
+        for line in _ENV_FILE.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            if "=" in line:
+                key, _, value = line.partition("=")
+                env_vars[key.strip()] = value.strip()
+    return env_vars
+
+
+def _write_env_file(updates: dict[str, str]):
+    """将更新写入 .env 文件，保留注释和格式"""
+    lines = []
+    if _ENV_FILE.exists():
+        lines = _ENV_FILE.read_text(encoding="utf-8").splitlines()
+
+    # 更新已有的 key 或追加
+    updated_keys = set()
+    new_lines = []
+    for line in lines:
+        stripped = line.strip()
+        if stripped and not stripped.startswith("#") and "=" in stripped:
+            key = stripped.split("=", 1)[0].strip()
+            if key in updates:
+                new_lines.append(f"{key}={updates[key]}")
+                updated_keys.add(key)
+                continue
+        new_lines.append(line)
+
+    # 追加未找到的 key
+    for key, value in updates.items():
+        if key not in updated_keys:
+            new_lines.append(f"{key}={value}")
+
+    _ENV_FILE.write_text("\n".join(new_lines) + "\n", encoding="utf-8")
+
+
+def _mask_key(key: str) -> str:
+    """将 API Key 掩码显示"""
+    if not key:
+        return ""
+    if len(key) <= 8:
+        return "***"
+    return f"{key[:4]}{'*' * (len(key) - 8)}{key[-4:]}"
+
+
+@app.get("/api/settings")
+async def get_settings():
+    """获取当前设置（API Key 掩码显示）"""
+    try:
+        env_vars = _read_env_file()
+        raw_key = env_vars.get("LLM_API_KEY", "")
+        return JSONResponse(content={
+            "success": True,
+            "settings": {
+                "llm_api_key": _mask_key(raw_key),
+                "llm_api_key_set": bool(raw_key),
+                "llm_base_url": env_vars.get("LLM_BASE_URL", "https://api.openai.com/v1"),
+                "llm_model": env_vars.get("LLM_MODEL", "claude-opus-5"),
+                "llm_max_tokens": env_vars.get("LLM_MAX_TOKENS", "8000"),
+                "llm_temperature": env_vars.get("LLM_TEMPERATURE", ""),
+                "knowledge_dir": env_vars.get("KNOWLEDGE_DIR", "knowledge"),
+            },
+        })
+    except Exception as e:
+        logger.error(f"Get settings failed: {e}")
+        return JSONResponse(content={"success": False, "error": str(e)}, status_code=500)
+
+
+@app.post("/api/settings")
+async def save_settings(
+    llm_api_key: str = Form(""),
+    llm_base_url: str = Form("https://api.openai.com/v1"),
+    llm_model: str = Form("claude-opus-5"),
+    llm_max_tokens: str = Form("8000"),
+    llm_temperature: str = Form(""),
+    knowledge_dir: str = Form("knowledge"),
+):
+    """保存设置到 .env 并热加载"""
+    try:
+        updates = {}
+
+        # 如果 key 包含 * 说明是掩码值（未修改），跳过
+        if llm_api_key and "*" not in llm_api_key:
+            updates["LLM_API_KEY"] = llm_api_key
+
+        updates["LLM_BASE_URL"] = llm_base_url
+        updates["LLM_MODEL"] = llm_model
+        updates["LLM_MAX_TOKENS"] = llm_max_tokens
+        updates["LLM_TEMPERATURE"] = llm_temperature
+        updates["KNOWLEDGE_DIR"] = knowledge_dir
+
+        # 写入 .env
+        _write_env_file(updates)
+
+        # 热加载：重新读取 .env 并更新 advisor 实例
+        load_dotenv(override=True)
+
+        import os
+        new_key = os.getenv("LLM_API_KEY", "")
+        advisor.api_key = new_key
+        advisor.base_url = os.getenv("LLM_BASE_URL", "https://api.openai.com/v1")
+        advisor.model = os.getenv("LLM_MODEL", "claude-opus-5")
+        advisor.max_tokens = int(os.getenv("LLM_MAX_TOKENS", "8000"))
+        temp = os.getenv("LLM_TEMPERATURE", "")
+        advisor.temperature = float(temp) if temp else None
+
+        configured = advisor.is_configured()
+        logger.info(f"Settings saved. Advisor configured: {configured}")
+
+        return JSONResponse(content={
+            "success": True,
+            "configured": configured,
+            "message": "设置已保存并生效",
+        })
+    except Exception as e:
+        logger.error(f"Save settings failed: {e}")
+        return JSONResponse(content={"success": False, "error": str(e)}, status_code=500)
+
+
 # ==================== SPA Fallback ====================
 
 

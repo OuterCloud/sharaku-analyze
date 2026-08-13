@@ -151,6 +151,11 @@ def _analyze_single_ticker(symbol: str, params: dict) -> Optional[dict]:
         revenue_growth = info.get("revenueGrowth")
         profit_margin = info.get("profitMargins")
 
+        # 价格位置指标
+        current_price = info.get("currentPrice") or info.get("regularMarketPrice")
+        week52_high = info.get("fiftyTwoWeekHigh")
+        week52_low = info.get("fiftyTwoWeekLow")
+
         # --- 筛选规则 ---
 
         # 规则 1：市值门槛
@@ -184,6 +189,11 @@ def _analyze_single_ticker(symbol: str, params: dict) -> Optional[dict]:
         if debt_to_equity is not None and debt_to_equity > de_max:
             return None
 
+        # 计算 52 周价格位置百分位 (0%=52周最低, 100%=52周最高)
+        price_position = None
+        if current_price and week52_high and week52_low and week52_high > week52_low:
+            price_position = round((current_price - week52_low) / (week52_high - week52_low) * 100, 1)
+
         return {
             "symbol": symbol,
             "name": name,
@@ -198,6 +208,10 @@ def _analyze_single_ticker(symbol: str, params: dict) -> Optional[dict]:
             "dividend_yield_pct": round(dividend_yield * 100, 2) if dividend_yield else None,
             "revenue_growth_pct": round(revenue_growth * 100, 2) if revenue_growth else None,
             "profit_margin_pct": round(profit_margin * 100, 2) if profit_margin else None,
+            "current_price": round(current_price, 2) if current_price else None,
+            "week52_high": round(week52_high, 2) if week52_high else None,
+            "week52_low": round(week52_low, 2) if week52_low else None,
+            "price_position_pct": price_position,
         }
     except Exception as e:
         logger.debug(f"Screener: {symbol} 分析跳过: {e}")

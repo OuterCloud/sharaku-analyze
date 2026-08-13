@@ -9,7 +9,7 @@ import {
 } from "../api/screener";
 import { useI18n } from "../i18n/context";
 
-type SortField = "peg" | "roe_pct" | "market_cap_b" | "fcf_m" | "de_pct" | "revenue_growth_pct";
+type SortField = "peg" | "roe_pct" | "market_cap_b" | "fcf_m" | "de_pct" | "revenue_growth_pct" | "price_position_pct";
 type SortDir = "asc" | "desc";
 
 export default function ScreenerTab() {
@@ -238,6 +238,9 @@ export default function ScreenerTab() {
               <span className="screener-legend-item">
                 <span className="screener-legend-dot neutral" />FCF — {t("screener.explain.fcf")}
               </span>
+              <span className="screener-legend-item">
+                <span className="screener-legend-dot neutral" />{t("screener.table.pricePos")} — {t("screener.explain.pricePos")}
+              </span>
             </div>
           </div>
 
@@ -245,8 +248,8 @@ export default function ScreenerTab() {
             <table className="screener-table">
               <thead>
                 <tr>
-                  <th>#</th>
-                  <th>{t("screener.table.symbol")}</th>
+                  <th className="sticky-col col-num">#</th>
+                  <th className="sticky-col col-symbol">{t("screener.table.symbol")}</th>
                   <th>{t("screener.table.name")}</th>
                   <th>{t("screener.table.sector")}</th>
                   <th className="sortable" onClick={() => handleSort("market_cap_b")}>
@@ -267,13 +270,16 @@ export default function ScreenerTab() {
                   <th className="sortable" onClick={() => handleSort("revenue_growth_pct")}>
                     {t("screener.table.growth")}{sortIcon("revenue_growth_pct")}
                   </th>
+                  <th className="sortable sticky-col col-price-pos" onClick={() => handleSort("price_position_pct")}>
+                    {t("screener.table.pricePos")}{sortIcon("price_position_pct")}
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {getSortedResults().map((item, idx) => (
                   <tr key={item.symbol}>
-                    <td className="row-num">{idx + 1}</td>
-                    <td className="symbol-cell">
+                    <td className="sticky-col col-num row-num">{idx + 1}</td>
+                    <td className="sticky-col col-symbol symbol-cell">
                       <strong>{item.symbol}</strong>
                     </td>
                     <td className="name-cell" title={item.name}>
@@ -292,6 +298,26 @@ export default function ScreenerTab() {
                         <span style={{ color: item.revenue_growth_pct >= 0 ? "#27ae60" : "#e74c3c" }}>
                           {item.revenue_growth_pct > 0 ? "+" : ""}{item.revenue_growth_pct}%
                         </span>
+                      ) : "N/A"}
+                    </td>
+                    <td className="num-cell sticky-col col-price-pos">
+                      {item.price_position_pct != null ? (
+                        <div className="price-pos-cell">
+                          <div className="price-pos-bar">
+                            <div
+                              className="price-pos-fill"
+                              style={{
+                                width: `${item.price_position_pct}%`,
+                                background: item.price_position_pct > 80 ? "#e74c3c"
+                                  : item.price_position_pct > 60 ? "#ff9800"
+                                  : "#27ae60",
+                              }}
+                            />
+                          </div>
+                          <span className={`price-pos-text${item.price_position_pct > 80 ? " high" : item.price_position_pct < 30 ? " low" : ""}`}>
+                            {item.price_position_pct}%
+                          </span>
+                        </div>
                       ) : "N/A"}
                     </td>
                   </tr>

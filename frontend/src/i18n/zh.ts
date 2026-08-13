@@ -10,6 +10,7 @@ const zh = {
   "tab.wheel": "Wheel策略",
   "tab.screener": "量化选股",
   "tab.advisor": "投资顾问",
+  "tab.settings": "设置",
 
   // Common
   "common.selectStock": "选择股票",
@@ -208,13 +209,34 @@ const zh = {
   "screener.explain.roe": "越高越好（公司用股东的钱赚钱的效率）",
   "screener.explain.de": "越低越安全（公司借了多少债）",
   "screener.explain.fcf": "自由现金流（公司实际赚到手的钱）",
+  "screener.explain.pricePos": "52周高低位置（越低=越接近底部，绿色安全；红色=已在高位）",
   "screener.table.symbol": "代码",
   "screener.table.name": "名称",
   "screener.table.sector": "板块",
   "screener.table.marketCap": "市值",
   "screener.table.growth": "营收增长",
+  "screener.table.pricePos": "价格位置",
   "screener.noResults": "未找到符合条件的标的",
   "screener.noResultsHint": "尝试放宽 PEG 上限或降低 ROE 要求",
+
+  // SettingsTab
+  "settings.llm.title": "LLM 投资顾问配置",
+  "settings.llm.description": "配置 LLM API 连接参数。保存后立即生效，无需重启服务。",
+  "settings.llm.keySet": "已配置",
+  "settings.llm.keyNotSet": "未配置",
+  "settings.llm.keyEmpty": "未设置 API Key",
+  "settings.llm.keyChange": "修改",
+  "settings.llm.keyPlaceholder": "输入新的 API Key",
+  "settings.llm.baseUrlHint": "兼容 OpenAI 格式的接口地址（如 Claude、DeepSeek 等）",
+  "settings.llm.model": "模型名称",
+  "settings.llm.tempPlaceholder": "留空使用默认值",
+  "settings.llm.tempHint": "留空不发送。部分模型已废弃此参数。",
+  "settings.llm.knowledgeDir": "知识库目录",
+  "settings.llm.knowledgeDirHint": "存放投资笔记的目录，相对项目根目录",
+  "settings.save": "保存设置",
+  "settings.saving": "保存中...",
+  "settings.saved": "✓ 设置已保存并生效",
+  "settings.cancel": "取消",
 } as const;
 
 export type TranslationKey = keyof typeof zh;
